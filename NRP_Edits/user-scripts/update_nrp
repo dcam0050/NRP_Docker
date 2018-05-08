@@ -1,0 +1,64 @@
+#!/bin/bash
+# This script gives many NRP updating options to users
+source $HBP/user-scripts/nrp_functions || { echo ERROR;exit 1; }
+
+function help {
+  echo
+  if [ "$NRP_INSTALL_MODE" != "user" ]; then
+    echo "Usage: "`basename $0`" <command> [all] [master]"
+    echo
+    echo "  If 'master' is provided, checkout the master branch"
+    echo "  If 'master' is NOT provided, checkout the development branch (default)"
+  else
+    echo "Usage: "`basename $0`" <command> [all]"
+    echo
+  fi
+  echo "  If 'all' is provided, include 3rd party repos (gazebo, opensim, nest, ...)"
+  echo "  Command can be:"
+  echo "    help    : Print this message"
+  echo "    rebase  : Switch repos to master and rebase"
+  echo "    build   : Build all buildable repos (except 3rd party)"
+  if [ "$NRP_INSTALL_MODE" != "user" ]; then
+    echo "              Requires VPN connection"
+  fi
+  echo "    update  : Run rebase followed by build"
+  echo "              You will be prompted to run configure_nrp"
+  if [ "$NRP_INSTALL_MODE" != "user" ]; then
+    echo "              Requires connection to the EPFL VPN"
+  fi
+  echo "    itmaster: Rebases your NRP and create a clean IT branch in each repo"
+  echo "    gitclean: Removes all local branches except master and development"
+}
+
+if [ $# -lt 1 ]; then help;exit 1; fi
+command="$1"
+arg1="$2"
+arg2="$3"
+
+#if [ "$arg1" == "all" -o "$arg2" == "all" ]; then all="all"; else all="no"; fi
+if [ "$arg1" == "master" -o "$arg2" == "master" -o "$NRP_INSTALL_MODE" == "user" ]; then branch="master"; else branch="development"; fi
+all="$2"
+
+case "$command" in
+"rebase")
+  nrp_rebase $all $branch
+  ;;
+"build")
+  nrp_build $all
+  ;;
+"update")
+  nrp_rebase $all $branch
+  nrp_build $all
+  nrp_configure
+  ;;
+"itmaster")
+  nrp_rebase $all $branch
+  it_branch $all
+  ;;
+"gitclean")
+  clean_branches $all
+  ;;
+*)
+  help
+  ;;
+esac

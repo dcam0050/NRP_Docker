@@ -1,0 +1,21 @@
+properties:
+   description: Identity management service, provides APIs to manage users and groups
+   ports: [8080]
+
+dev:
+   machine: bbpcc023
+   url: https://services-dev.humanbrainproject.eu/idm/v1/api
+   human_url: https://services-dev.humanbrainproject.eu/idm
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi25
+   url: https://services-staging.humanbrainproject.eu/idm/v1/api
+   human_url: https://services-staging.humanbrainproject.eu/idm
+   oauth_dev: staging
+
+prod:
+   machine: bbpsrvi26
+   url: https://services.humanbrainproject.eu/idm/v1/api
+   human_url: https://services.humanbrainproject.eu/idm
+   oauth_dev: prod

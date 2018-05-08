@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig"
+     xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig ../ExDConfFile.xsd">
+    <name>Empty template experiment</name>
+    <thumbnail>TemplateEmpty.png</thumbnail>
+    <description>This empty experiment is based on the models that you have selected. You are free to edit the description.</description>
+    <timeout>840</timeout>
+    <configuration type="3d-settings" src="TemplateEmpty.json"/>
+    <maturity>development</maturity>
+    <environmentModel src="empty_world/empty_world.sdf">
+        <robotPose x="0.0" y="0.0" z="0.5" ux="0.0" uy="0.0" uz="0.0" theta="0.0"/>
+    </environmentModel>
+    <bibiConf src="TemplateEmpty.bibi"/>
+    <cameraPose>
+        <cameraPosition x="4.5" y="0" z="1.8"/>
+        <cameraLookAt x="0" y="0" z="0.6"/>
+    </cameraPose>
+</ExD>

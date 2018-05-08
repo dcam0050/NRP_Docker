@@ -1,0 +1,24 @@
+properties:
+   description: Document Server, provides UUIDs for documents
+   #confluence:
+   ports: [8000(nginx auth), 8888(un-auth)]
+   #puppet_recipe:
+   #puppet_url:
+
+dev:
+   machine: bbpcc018
+   url: https://services-dev.humanbrainproject.eu/document/v0/api
+   human_url: https://services-dev.humanbrainproject.eu/document/v0/ui/
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi15
+   url: https://services-staging.humanbrainproject.eu/document/v0/api
+   human_url: https://services-staging.humanbrainproject.eu/document/v0/ui/
+   oauth_dev: staging
+
+prod:
+   machine: bbpgb062
+   url: https://services.humanbrainproject.eu/document/v0/api
+   human_url: https://services.humanbrainproject.eu/document/v0/ui/
+   oauth_dev: prod

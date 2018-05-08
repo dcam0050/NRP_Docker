@@ -1,0 +1,137 @@
+#!/bin/bash
+# A script to enable or disable oidc
+
+mode=$1
+no_restart=$2 # makes sure nginx is not started on *dev servers* when running_mode is used
+needs_source=0
+
+if [[ -z $mode ]]; then
+  echo "2. Offline mode -- Disable OIDC and use your local machine as backend and storage"
+  echo "3. Local Collab mode -- Enable OIDC and use your local machine as backend with collab-support services"
+  echo "4. Mixed Collab mode -- OIDC authentication and local storage"
+  echo "5. Offline mode with localhost replaced by local IP -- Disable OIDC and use your local machine as backend and storage"
+  echo
+  echo "Specify the additional 'no_restart' option if you want nginx not to be restarted"
+  read mode
+fi
+ 
+function enableBackendOIDC {
+  echo "Editing Backend config.json"
+  cd $HBP/ExDBackend/hbp-flask-restful-swagger-master/flask_restful_swagger/static
+  sed -e '/deactivate/ s/true/false/' -i config.json
+}
+
+function enableNginxOIDC {
+  echo "Editing nginx conf files"
+  cd ~/.local/etc/nginx/conf.d
+  sed -e '/access_by_lua_file/ s/^#*//#/' -i nrp-services.conf
+  sed -e '/_access_token/, +2 s/^#*//#/' -i nrp-services.conf
+  sed -e '/_userinfo/, +2 s/^#*//#/' -i nrp-services.conf
+}
+
+function disableBackendOIDC {
+  echo "Editing Backend config.json"
+  cd $HBP/ExDBackend/hbp-flask-restful-swagger-master/flask_restful_swagger/static
+  sed -e '/deactivate/ s/false/true/' -i config.json
+}
+
+function disableNginxOIDC {
+  echo "Editing nginx conf files"
+  cd ~/.local/etc/nginx/conf.d
+  sed -e '/access_by_lua_file/ s/^#*/#/' -i nrp-services.conf
+  sed -e '/_access_token/, +2 s/^#*/#/' -i nrp-services.conf
+  sed -e '/_userinfo/, +2 s/^#*/#/' -i nrp-services.conf
+}
+
+function proxyUseLocalhostCollab {
+  echo "Using the proxy config file containing your localhost as backend, and the Collab as storage"
+  cd $HBP/nrpBackendProxy
+  if [ -f config.json ]; then
+    rm config.json
+  fi
+  cp config.json.sample.local config.json
+  sed -e '/storage/ s/FS/Collab/' -i config.json
+  sed -e '/authentication/ s/FS/Collab/' -i config.json
+}
+
+function proxyUseLocalhostCollabAuthFsStorage {
+  echo "Configuring proxyto use localhost as backend, the Collab as authentication and FS as storage"
+  cd $HBP/nrpBackendProxy
+  if [ -f config.json ]; then
+    rm config.json
+  fi
+  cp config.json.sample.local config.json
+  sed -e '/storage/ s/Collab/FS/' -i config.json
+  sed -e '/authentication/ s/FS/Collab/' -i config.json
+}
+
+function proxyUseLocalhostFS {
+  echo "Using the proxy config file containing your localhost as backend, and your FS as storage"
+  cd $HBP/nrpBackendProxy
+  if [ -f config.json ]; then
+    rm config.json
+  fi
+  cp config.json.sample.local config.json
+  sed -e '/storage/ s/Collab/FS/' -i config.json
+  sed -e '/authentication/ s/Collab/FS/' -i config.json
+}
+
+function enableCollabSupport {
+  echo "Enabling authentication in local proxy config for collab support"
+  cd $HBP/nrpBackendProxy
+  sed -e '/deactivate/ s/true/false/' -i config.json
+}
+
+function disableCollabSupport {
+  cd $HBP/nrpBackendProxy
+  sed -e '/deactivate/ s/false/true/' -i config.json
+}
+
+function replaceLocalhostByIP {
+  local_host=`hostname -I`
+  local_host="$(echo -e "${local_host}" | tr -d '[:space:]')"
+  frontend_config=$HBP/ExDFrontend/app/config.json
+  proxy_config=$HBP/nrpBackendProxy/config.json
+  sed -i "s/http:\/\/localhost/http:\/\/$local_host/g" $frontend_config $proxy_config
+  sed -i "s/ws:\/\/localhost/ws:\/\/$local_host/g" $frontend_config $proxy_config
+}
+
+case $mode in
+2)
+  disableBackendOIDC
+  disableNginxOIDC
+  proxyUseLocalhostFS
+  disableCollabSupport
+  ;;
+3)
+  enableBackendOIDC
+  enableNginxOIDC
+  proxyUseLocalhostCollab
+  enableCollabSupport
+  ;;
+4)
+  enableBackendOIDC
+  enableNginxOIDC
+  proxyUseLocalhostCollabAuthFsStorage
+  enableCollabSupport
+  ;;
+5)
+  disableBackendOIDC
+  disableNginxOIDC
+  proxyUseLocalhostFS
+  disableCollabSupport
+  replaceLocalhostByIP
+  ;;
+esac
+
+
+if [ -z $no_restart ] || [ "$no_restart" != "no_restart" ]; then
+  $HOME/.local/etc/init.d/nginx restart
+fi
+
+if [ $needs_source -eq 1 ]; then
+  echo "===================== IMPORTANT ====================="
+  echo "======= Remember to source your .bashrc file! ======="
+  echo "====================================================="
+fi
+echo "Done"

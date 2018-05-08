@@ -1,0 +1,117 @@
+# These variables can be included in the .bashrc before starting the installation process
+
+if [ -n "$PYTHONPATH" ]; then
+printf "\033[1;31m+-------------------------- Neurorobotics Platform warning ---------------------------+\n"
+printf "| Dear Neurorobotics user, your PYTHONPATH contains previous paths.                   |\n"
+printf "| This might cause the Neurorobotics Platform to malfunction.                         |\n"
+printf "| If you are experiencing problems (like MPI.so not finding function references), add |\n"
+printf "|   export PYTHONPATH=                                                                |\n"
+printf "| to your ~/.bashrc                                                                   |\n"
+printf "+-------------------------------------------------------------------------------------+\033[0m\n"
+fi
+
+CURR_SHELL=$(basename `ps -p $$ --no-headers -o comm`)
+if [ -z "$CURR_SHELL" ]
+then
+      CURR_SHELL='sh'
+fi
+# ROS variables
+{ lsb_release -r | grep 14 >>/dev/null; } && source /opt/ros/indigo/setup.$CURR_SHELL || source /opt/ros/kinetic/setup.$CURR_SHELL
+
+export ROS_PARALLEL_JOBS=-j4
+export ROS_IP=127.0.0.1
+
+# Gazebox64 libs
+source $HOME/.local/share/gazebo/setup.sh
+export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+export CMAKE_PREFIX_PATH=$HOME/.local/lib/x86_64-linux-gnu/cmake/gazebo/:$CMAKE_PREFIX_PATH
+
+# NRP virtual env
+export NRP_VIRTUAL_ENV=$HOME/.opt/platform_venv
+export VIRTUAL_ENV=$NRP_VIRTUAL_ENV
+
+# gzbridge & gzserver
+export PATH=$HOME/.opt/bbp/nrp-services:$PATH
+
+# HPB models for gazebo
+export GAZEBO_MODEL_PATH=$HOME/.gazebo/models:$GAZEBO_MODEL_PATH
+
+# Bullet
+export PKG_CONFIG_PATH=$HOME/.local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
+
+# sdformat
+export CMAKE_PREFIX_PATH=$HOME/.local/lib/x86_64-linux-gnu/cmake/sdformat:$CMAKE_PREFIX_PATH
+
+# HBP opensim
+export OPENSIM_INSTALL_DIR=$HOME/.local
+export OPENSIM_HOME=$HOME/.local
+
+# local install including HBP plugins
+source $HBP/GazeboRosPackages/devel/setup.$CURR_SHELL
+
+# use HBP version of gazebo in scripts
+export GZSERVER_BIN_DIR=$HOME/.local/bin
+
+# HBP NEST
+export PYTHONPATH=$PYTHONPATH:$HOME/.local/lib/python2.7/site-packages:$HOME/.local/lib/x86_64-linux-gnu/python2.7/site-packages
+
+# GazeboRosPackages
+export PYTHONPATH=$PYTHONPATH:$HBP/GazeboRosPackages/devel/lib/python2.7/dist-packages
+
+# HBP CLE
+export PYTHONPATH=$PYTHONPATH:$HBP/CLE/hbp_nrp_cle
+
+# HBP ExperimentControl
+export PYTHONPATH=$PYTHONPATH:$HBP/ExperimentControl/hbp_nrp_excontrol:$HBP/ExperimentControl/hbp_nrp_scxml
+
+# HBP ExDBackend
+export PYTHONPATH=$PYTHONPATH:$HBP/ExDBackend/hbp_nrp_backend:$HBP/ExDBackend/hbp_nrp_cleserver:$HBP/ExDBackend/hbp_nrp_commons:$HBP/ExDBackend/hbp_nrp_watchdog
+
+# HBP Flask restful Swagger
+export PYTHONPATH=$PYTHONPATH:$HBP/ExDBackend/hbp-flask-restful-swagger-master
+
+# HBP VirtualCoach
+export PYTHONPATH=$PYTHONPATH:$HBP/VirtualCoach/hbp_nrp_virtual_coach
+
+# HBP MUSIC pyNN/NEST Support
+export PYTHONPATH=$PYTHONPATH:$HBP/BrainSimulation/hbp_nrp_music_xml:$HBP/BrainSimulation/hbp_nrp_music_interface
+
+# HBP Distributed NEST Support
+export PYTHONPATH=$PYTHONPATH:$HBP/BrainSimulation/hbp_nrp_distributed_nest
+
+# retina
+export RETINA_INSTALL_DIR=$HBP/retina
+export PYTHONPATH=$RETINA_INSTALL_DIR/build/lib:$PYTHONPATH
+
+# HBP models directory
+export NRP_MODELS_DIRECTORY=$HBP/Models
+export NRP_EXPERIMENTS_DIRECTORY=$HBP/Experiments
+
+# NRP local storage path
+export STORAGE_PATH=$HOME/.opt/nrpStorage
+
+# General NRP
+export NRP_USER=$USER
+
+# User scripts
+export PATH=$HBP/user-scripts:$PATH
+
+# General paths
+export PATH=$HOME/.local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/.local/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
+export MANPATH=$HOME/.local/share/man:$MANPATH
+export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
+export CPATH=$HOME/.local/include:$CPATH
+
+# Make number of make processes user-configurable
+if [ -z "$NRP_NUM_CORES" ]; then
+    export NRP_NUM_MAKE_PROCESSES=`nproc`
+else
+    export NRP_NUM_MAKE_PROCESSES=$NRP_NUM_CORES
+fi
+
+# This loads nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"

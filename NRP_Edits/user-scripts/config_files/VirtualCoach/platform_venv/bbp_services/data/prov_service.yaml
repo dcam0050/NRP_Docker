@@ -1,0 +1,23 @@
+properties:
+   description: Provenance Server
+   confluence: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/Platform+operations#Platformoperations-ProvenanceServer
+   ports: [8000]
+   puppet_url: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/Provenance+server+recipe
+
+dev:
+   machine: bbpsrvi36
+   url: https://services-dev.humanbrainproject.eu/provenance/v1/api
+   human_url: https://services-dev.humanbrainproject.eu/provenance/v1/ui/
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi16
+   url: https://services-staging.humanbrainproject.eu/provenance/v1/api
+   human_url: https://services-staging.humanbrainproject.eu/provenance/v1/ui/
+   oauth_dev: staging
+
+prod:
+   machine: bbpsrvi17
+   url: https://services.humanbrainproject.eu/provenance/v1/api
+   human_url: https://services.humanbrainproject.eu/provenance/v1/ui/
+   oauth_dev: prod

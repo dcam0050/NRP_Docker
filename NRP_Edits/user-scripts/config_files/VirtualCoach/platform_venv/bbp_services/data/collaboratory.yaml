@@ -1,0 +1,19 @@
+properties:
+   description: The HBP Collaboratory 
+
+dev:
+   machine: bbpcc026
+   url: https://collab-dev.humanbrainproject.eu
+   human_url: https://collab-dev.humanbrainproject.eu
+   oauth_dev: dev
+
+staging:
+   machine: NA
+   url: NA
+   oauth_dev: staging
+
+prod:
+   machine: bbpps05
+   url: https://collab.humanbrainproject.eu
+   human_url: https://collab.humanbrainproject.eu
+   oauth_dev: prod

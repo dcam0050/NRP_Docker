@@ -1,0 +1,136 @@
+#alias cle-backend='PYTHONPATH=$PYTHONPATH:$HOME/.opt/platform_venv/lib/python2.7/site-packages && uwsgi --ini  $HOME/.local/etc/nginx/uwsgi-nrp.ini'
+alias cle-backend='PYTHONPATH=$PYTHONPATH:$HOME/.opt/platform_venv/lib/python2.7/site-packages && python $HBP/ExDBackend/hbp_nrp_backend/hbp_nrp_backend/runserver.py --port=8080'
+alias cle-factory='PYTHONPATH=$PYTHONPATH:$HOME/.opt/platform_venv/lib/python2.7/site-packages && python $HBP/ExDBackend/hbp_nrp_cleserver/hbp_nrp_cleserver/server/ROSCLESimulationFactory.py'
+alias cle-rosbridge='rosrun rosbridge_server rosbridge_websocket'
+alias cle-frontend='cd $HBP/ExDFrontend && grunt serve'
+alias cle-nginx='$HOME/.local/etc/init.d/nginx restart'
+alias cle-proxy='cd $HBP/nrpBackendProxy && node app.js'
+alias cle-rosvideo='rosrun web_video_server web_video_server _port:=8081'
+
+cle-virtual-coach()
+{
+    # save the original PYTHONPATH and update current to include the VirtualCoach
+    OLD_PYTHONPATH=$PYTHONPATH
+    PYTHONPATH=$PYTHONPATH:$HOME/.opt/platform_venv/lib/python2.7/site-packages
+
+    # usage information and examples for no arguments or -h flag
+    if [ "$#" -eq 0 ]  || [ "$1" == "-h" ] ; then
+        echo "Usage: cle-virtual-coach [-h] [args]"
+        echo "       [-h] Print this usage information."
+        echo "       [args] arguments to run in a VirtualCoach configured environment, e.g.:"
+        echo "              cle-virtual-coach foo.py a b c -> launches foo.py with arguments"
+        echo "              cle-virtual-coach jupyter notebook -> launches a jupyter notebook session"
+        echo "              cle-virtual-coach python -> launches a python interpreter session"
+
+    # user specified Python script, convenience to avoid the extra 'python' in arguments
+    elif [[ "$1" == *\.py ]] ; then
+        python $@
+
+    # otherwise just run whatever command as provided
+    else
+        eval $@      # run any user commands with the modified PYTHONPATH
+    fi
+
+    # save the exit code for last executed command
+    RES=$?
+
+    # reset the path so we don't continually append to it after multiple runs
+    PYTHONPATH=$OLD_PYTHONPATH
+
+    # propagate the exit codes if needed above
+    return $RES
+}
+
+cle_restart_backend()
+{
+  killlist=("python.*roscore"
+            "python\\s.*rosmaster"
+            "python\\s.*rosbridge"
+            "lib/rosout/rosout"
+            "${GZSERVER_BIN_DIR}/gzserver"
+            "python\\s.*runserver\\.py"
+            "python\\s.*ROSCLESimulationFactory\\.py"
+            "python\\s.*StateMachineRunner\\.py"
+            "python\\s.*BrainProcess"
+            "python\\s.*CLELauncher"
+            "node\\s.*ws_server\\.js"
+            "web_video_server"
+            "uwsgi")
+
+  kill_hbp_processes "${killlist[@]}"
+
+  roscore & sleep 1
+  cle-rosvideo & sleep 1
+  cle-factory & sleep 1
+  cle-backend &
+  cle-rosbridge &
+}
+
+kill_hbp_cle()
+{
+  killlist=("python.*roscore"
+            "python\\s.*rosmaster"
+            "python\\s.*rosbridge"
+            "lib/rosout/rosout"
+            "${GZSERVER_BIN_DIR}/gzserver"
+            "python\\s.*runserver\\.py"
+            "python\\s.*ROSCLESimulationFactory\\.py"
+            "python\\s.*StateMachineRunner\\.py"
+            "python\\s.*BrainProcess"
+            "python\\s.*CLELauncher"
+            "[0-9]+\\snode\\sapp\\.js$"
+            "node\\s.*ws_server\\.js"
+            "web_video_server"
+            "uwsgi")
+
+  kill_hbp_processes "${killlist[@]}"
+}
+
+kill_hbp_processes()
+{
+    declare -a killlist=("${@}")
+
+    # find the unique process groups for any matches, this will ensure all
+    # spawned subprocesses are also cleanly killed
+    # tip: use http:/explainshell.com to understand the entire command expansion
+    pgids=($(ps -eo pgid,cmd |
+             grep -E "$(IFS=$'|'; echo "${killlist[*]}")" |
+             grep -v grep |
+             sed -e 's/^\s*//' |
+             cut -d ' ' -f1 |
+             sort -ru |
+             tr '\n' ' '))
+
+    # loop through and try to kill all of the process groups
+    echo "Found ${#pgids[@]} NRP process groups to terminate."
+    for pgid in ${pgids[@]}
+    do
+        # print the remaining processes under this process group
+        echo
+        echo "$(ps -eo pgid,cmd | grep -E "^\\s*$pgid" | grep -vE "bash|grep" | sed 's/^/  /')"
+
+        # kill with escalating signals, allow a short time to terminate between attempts
+        for level in INT TERM KILL
+        do
+            ps -eo pgid | grep -qwE "^\\s*$pgid" || break
+            echo "    sending: $level"
+            kill -$level -$pgid
+            sleep 1
+        done
+    done
+
+    # force clean NRP gzserver and gzbridge lock files (required for next clean start/launch)
+    rm -f $HOME/.gazebo/gzserver.lock
+    rm -f $HBP/gzweb/gzbridge.lock
+
+    # double check everything is killed, this is mostly to ensure a cle-kill
+    # during a startup or process spawning is as successful as we can make it
+    if [[ ${#pgids[@]} -gt 0 ]]
+    then
+        kill_hbp_processes "${killlist[@]}"
+    fi
+}
+
+alias cle-start='export VIRTUAL_ENV=$NRP_VIRTUAL_ENV;roscore & sleep 1;cle-rosvideo & sleep 1;cle-factory & sleep 1;cle-backend & sleep 1; cle-proxy & cle-rosbridge'
+alias cle-kill='kill_hbp_cle'
+alias cle-postgres='pg_ctl -D $HOME/.local/postgres/data/ -l logfile restart'

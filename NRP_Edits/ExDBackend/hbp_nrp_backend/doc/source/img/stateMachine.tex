@@ -1,0 +1,36 @@
+\documentclass[tikz,border=2pt]{standalone}
+
+\usepackage[utf8]{inputenc}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+
+\begin{document}
+
+\begin{tikzpicture}[->,>=stealth',auto,semithick,node distance=5cm,text width={width("initialized")},
+                    align=center]
+
+    \node[state]         (created) {created};
+    \node[state]         (paused) [right of=created]{paused};
+    \node[state]         (started) [right of=paused]{started};
+    \node[state,double]  (stopped)[below of=started]{stopped};
+    \node[state]         (halted) [below of=paused]{halted};
+    \node[state,double]  (failed) [below of=created]{failed};
+
+    \path (created) edge node {initialized $\rightarrow$ initialize} (paused)
+                    edge node {failed $\rightarrow$ stop} (failed)
+          (paused)	edge [loop above] node {reset $\rightarrow$ reset} (paused)
+                    edge [bend left=20] node [below] {started $\rightarrow$ start} (started)
+                    edge [bend right] node [pos=0.86, below] {stopped $\rightarrow$ stop} (stopped)
+                    edge node [left] {failed $\rightarrow$ fail} (halted)
+          (started)	edge [bend left=20] node[below]{paused $\rightarrow$ pause} (paused)
+                    edge [bend right=60] node[above] {reset $\rightarrow$ reset} (paused)
+                    edge node{stopped $\rightarrow$ stop} (stopped)
+                    edge [bend left] node [pos=0.86, below] {failed $\rightarrow$ fail} (halted)
+          (halted)  edge node{stopped $\rightarrow$ stop} (failed);
+
+     \draw[->] ([xshift=-5mm]created.west) -- (created);
+
+\end{tikzpicture}
+
+\end{document}

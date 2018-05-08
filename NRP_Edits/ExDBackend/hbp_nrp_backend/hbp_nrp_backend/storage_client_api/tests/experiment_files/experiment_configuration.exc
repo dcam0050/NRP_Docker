@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<ns1:ExD xmlns:ns1="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ns1:name>Baseball tutorial experiment - Exercise</ns1:name>
+    <ns1:thumbnail>ExDTutorialBaseball.png</ns1:thumbnail>
+    <ns1:description>
+      This guided experiment will walk you through all the features of the Neurorobotics Platform.
+      Launch it and follow the instructions provided in the jupyter notebook located in the Experiments/tutorial_baseball/ folder.
+    </ns1:description>
+    <ns1:timeout>86400.0</ns1:timeout>
+    <ns1:configuration src="ExDTutorialBaseball.3ds" type="3d-settings"/>
+    <ns1:maturity>production</ns1:maturity>
+    <ns1:environmentModel src="empty_world.sdf">
+        <ns1:robotPose theta="0.707106896726" ux="0.0" uy="0.0" uz="1.57" x="0.0" y="0.0" z="0.624"/>
+    </ns1:environmentModel>
+    <ns1:bibiConf src="bibi_configuration.bibi"/>
+    <ns1:experimentControl>
+        <ns1:stateMachine id="BallThrowingMachine" src="throw_ball.exd" xsi:type="ns1:SMACHStateMachine"/>
+    </ns1:experimentControl>
+    <ns1:cameraPose>
+        <ns1:cameraPosition x="2.5" y="0.0" z="1.8"/>
+        <ns1:cameraLookAt x="0.0" y="0.0" z="0.6"/>
+    </ns1:cameraPose>
+</ns1:ExD>

@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<ns1:bibi xmlns:ns1="http://schemas.humanbrainproject.eu/SP10/2014/BIBI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<ns1:brainModel>
+		<ns1:file>idle_brain.py</ns1:file>
+		<ns1:populations from="0" population="neurons" to="2" xsi:type="ns1:Range"/>
+		<ns1:populations from="0" population="record" to="2" xsi:type="ns1:Range"/>
+	</ns1:brainModel>
+	<ns1:bodyModel>model.sdf</ns1:bodyModel>
+	<ns1:transferFunction src="csv_spike_monitor.py" xsi:type="ns1:PythonTransferFunction"/>
+	<ns1:transferFunction src="csv_joint_state_monitor.py" xsi:type="ns1:PythonTransferFunction"/>
+	<ns1:transferFunction src="csv_robot_position.py" xsi:type="ns1:PythonTransferFunction"/>
+	<ns1:transferFunction xsi:type="ns1:PythonTransferFunction">
+    #
+    import hbp_nrp_cle.tf_framework as nrp
+
+    # This specifies that the neurons 0 to 2 of the circuit population
+    # should be monitored. You can see them in the spike train widget
+    @nrp.NeuronMonitor(nrp.brain.record, nrp.spike_recorder)
+    def all_neurons_spike_monitor(t):
+        # Uncomment to log into the 'log-console' visible in the simulation
+        # clientLogger.info(&quot;Time: &quot;, t)
+        return True
+    #
+  </ns1:transferFunction>
+	<ns1:transferFunction xsi:type="ns1:PythonTransferFunction">
+    #
+    import hbp_nrp_cle.tf_framework as nrp
+    from hbp_nrp_cle.robotsim.RobotInterface import Topic
+    import geometry_msgs.msg
+
+    @nrp.MapSpikeSink(&quot;output_neuron&quot;, nrp.brain.neurons[1], nrp.leaky_integrator_alpha)
+    @nrp.Neuron2Robot(Topic('/husky/cmd_vel', geometry_msgs.msg.Twist))
+    # Example TF: get output neuron voltage and output constant on robot actuator. You could do something with the voltage here and command the robot accordingly.
+    def turn_around(t, output_neuron):
+        voltage=output_neuron.voltage
+        return geometry_msgs.msg.Twist(linear=geometry_msgs.msg.Vector3(0,0,0),
+                                       angular=geometry_msgs.msg.Vector3(0,0,5))
+    #
+  </ns1:transferFunction>
+	<ns1:transferFunction xsi:type="ns1:PythonTransferFunction">
+    #
+    import sensor_msgs.msg
+
+    @nrp.MapRobotSubscriber(&quot;camera&quot;, Topic('/husky/camera', sensor_msgs.msg.Image))
+    @nrp.MapSpikeSource(&quot;input_neuron&quot;, nrp.brain.neurons[0], nrp.poisson)
+    @nrp.Robot2Neuron()
+    # Example TF: get image and fire at constant rate. You could do something with the image here and fire accordingly.
+    def grab_image(t, camera, input_neuron):
+        image = camera.value
+        input_neuron.rate = 10
+    #
+  </ns1:transferFunction>
+</ns1:bibi>

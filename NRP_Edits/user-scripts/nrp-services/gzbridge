@@ -1,0 +1,88 @@
+#!/bin/bash
+
+GZBRIDGE_BIN_DIR=$HBP/gzweb/gzbridge
+
+if [ -z $GZBRIDGE_BIN_DIR ]; then
+    echo "Necessary environment variable GZBRIDGE_BIN_DIR not set!"
+    exit 1
+fi
+
+source $HOME/.bashrc
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+if ! node --version | grep  -q v0.10
+then
+  nvm use 0.10 2>/dev/null
+  if [ $? -ne 0 ]
+  then
+    printf "\033[0;31mYou must use node v0.10 or use nvm and install v0.10 (ie. nvm install 0.10)\033[0m\n"
+    exit 1
+  fi
+fi
+
+exec="$GZBRIDGE_BIN_DIR/ws_server.js"
+prog="node"
+
+lockfile=$HBP/gzweb/gzbridge.lock
+
+start() {
+
+    # test if the exec file exists and execute permission is granted
+    # exit with exit code 5 (program not installed) if conditions do not hold
+    if [ -x $exec ]; then
+	echo "Found $exec"
+    else
+	echo "Not found: $exec"
+    fi
+
+    # we have to change to the directory, otherwise loading of materials
+    # does not work properly :(
+    cd $GZBRIDGE_BIN_DIR
+
+    echo -n $"Starting $prog: "
+    # if not running, start gzbridge up here
+    $exec &
+    retval=$?
+    GZBRIDGE_PID=$!
+    if [ $retval -eq 0 ]; then
+	echo " OK."
+    else
+	echo " Error $retval"
+    fi
+    echo
+    [ $retval -eq 0 ] && echo $GZBRIDGE_PID > $lockfile
+    return $retval
+}
+
+stop() {
+    if [ ! -f $lockfile ] ; then
+        return 0
+    fi
+
+    echo -n $"Stopping $prog: "
+    kill -9 $(<$lockfile)
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        echo " OK."
+	rm -f $lockfile
+    else
+        echo " Error $retval"
+    fi
+    return 0
+}
+
+case $1 in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 2
+		start
+		;;
+	*)
+		echo "Usage: $0 (start|stop|restart)"
+		;;
+esac

@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "deactivate": false,
+    "clientId": "neurorobotics-ui",
+    "url": "https://services.humanbrainproject.eu/oidc"
+  },
+  "oidc": {
+    "debug": false
+  }
+}

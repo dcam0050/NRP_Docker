@@ -1,0 +1,15 @@
+[gazebo]
+start-cmd=$HOME/.opt/bbp/nrp-services/gzserver start
+stop-cmd=$HOME/.opt/bbp/nrp-services/gzserver stop
+restart-cmd=$HOME/.opt/bbp/nrp-services/gzserver restart
+
+[gzbridge]
+start-cmd=$HOME/.opt/bbp/nrp-services/gzbridge start
+stop-cmd=$HOME/.opt/bbp/nrp-services/gzbridge stop
+restart-cmd=$HOME/.opt/bbp/nrp-services/gzbridge restart
+
+[ros]
+ros-cle-node-name=ros_cle_simulation
+
+[network]
+interfaces=eth0

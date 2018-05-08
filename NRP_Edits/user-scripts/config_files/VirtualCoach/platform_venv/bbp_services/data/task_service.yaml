@@ -1,0 +1,23 @@
+properties:
+   description: Task service, runs tasks (aka PlatformTaskManager)
+   confluence: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/Platform+operations#Platformoperations-TaskManager
+   ports: ['8000(nginx auth)', '8383(un-auth)', '5000(Rep/Req ZMQ)', '5001(Pub/Sub ZMQ)']
+   puppet_url: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/Platform+Task+Manager+server+recipe
+
+dev:
+   machine: bbpsrvi35
+   url: https://services-dev.humanbrainproject.eu/task/v0/api
+   human_url: https://services-dev.humanbrainproject.eu/task/v0/ui/
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi34
+   url: https://services-staging.humanbrainproject.eu/task/v0/api
+   human_url: https://services-staging.humanbrainproject.eu/task/v0/ui/
+   oauth_dev: staging
+
+prod:
+   machine: bbpsrvi19
+   url: https://services.humanbrainproject.eu/task/v0/api
+   human_url: https://services.humanbrainproject.eu/task/v0/ui/
+   oauth_dev: prod

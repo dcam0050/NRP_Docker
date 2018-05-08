@@ -1,0 +1,22 @@
+Metadata-Version: 2.0
+Name: bbp-client
+Version: 0.3.19
+Summary: python client to BBP rest services, including OIDC, document_service, task_manager
+Home-page: http://bluebrain.epfl.ch
+Author: mgevaert
+Author-email: michael.gevaert@epfl.ch
+License: UNKNOWN
+Platform: UNKNOWN
+Requires-Dist: httplib2 (<1.0,>=0.8)
+Requires-Dist: python-dateutil (<3.0,>=2.2)
+Requires-Dist: requests (<3.0,>=2.5.1)
+Requires-Dist: PyYAML (==3.10)
+Requires-Dist: argparse (==1.2.1)
+Requires-Dist: ordereddict (==1.1)
+Requires-Dist: mechanize (==0.2.5)
+Requires-Dist: bbp-services (<0.1,>=0.0.14)
+Requires-Dist: task-types (<0.1,>=0.0.10)
+
+UNKNOWN
+
+

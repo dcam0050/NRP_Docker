@@ -1,0 +1,2 @@
+include requirements.txt
+include hbp_nrp_cleserver/bibi_config/tf_template.pyt

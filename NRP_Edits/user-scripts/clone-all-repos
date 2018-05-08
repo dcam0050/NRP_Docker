@@ -1,0 +1,58 @@
+#!/bin/bash
+# A script to clone all necessary repos when installing from scratch. the $HBP need to be set-up for this script to work successfully
+
+if [[ -z $HBP ]] ; then
+  echo "Please set the \$HBP variable to your desired installation path first."
+  exit
+else
+  if [[ -d $HBP ]] ; then
+    echo "The NRP repos will be cloned to the already-existing directory" $HBP
+  elif [[ -f $HBP ]] ; then
+    echo "Invalid destination." $HBP "is a file."
+    exit 1
+  else
+    echo "The NRP repos will be cloned to the newly created directory" $HBP
+    mkdir -p -v $HBP
+  fi
+fi
+
+# Get EPFL/Bitbucket username to clone repos
+echo
+if [ "$NRP_INSTALL_MODE" != "user" ]
+then
+  read -p "Enter your EPFL username: " user
+fi
+echo
+
+function clone_repo {
+
+  if [ "$#" -ne 1 ] ; then
+    echo "Invalid number of arguments to clone_repo. Aborting."
+    exit 1
+  fi
+
+  echo
+  echo $1
+  if [ -d "$1" ] ; then
+    echo "Skipped, directory already exists."
+  else
+    if [ "$NRP_INSTALL_MODE" == "user" ]
+    then
+      git clone https://bitbucket.org/hbpneurorobotics/$1.git
+    else
+      git clone ssh://$user@bbpcode.epfl.ch/neurorobotics/$1 && scp -p $user@bbpcode.epfl.ch:hooks/commit-msg $1/.git/hooks/
+    fi
+  fi
+  echo
+}
+
+# cloning all repos
+source $HBP/user-scripts/repos.txt
+repos=(
+  ${nrp_3rd_party[*]}
+  ${nrp_repos[*]}
+)
+echo "Cloning all repos:"
+pushd $HBP > /dev/null
+for repo in ${repos[@]} ; do clone_repo $repo ; done
+popd > /dev/null

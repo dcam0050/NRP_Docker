@@ -1,0 +1,21 @@
+properties:
+   description: Serve various bluepy related thingies
+   #confluence:
+   ports: [8000(nginx auth), 8888(un-auth)]
+   #puppet_recipe:
+   #puppet_url:
+
+dev:
+   machine: bbpsrvi39
+   url: https://services-dev.humanbrainproject.eu/bluepy/v0/api
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi41
+   url: https://services-staging.humanbrainproject.eu/bluepy/v0/api
+   oauth_dev: staging
+
+prod:
+   machine: bbpgb063
+   url: https://services.humanbrainproject.eu/bluepy/v0/api
+   oauth_dev: prod

@@ -1,0 +1,21 @@
+properties:
+   description: Mimetype Server
+   ports: [8000, 8383]
+
+dev:
+   machine: bbpcc020
+   url: https://services-dev.humanbrainproject.eu/mimetype/v0/
+   human_url: https://services-dev.humanbrainproject.eu/mimetype/v0/ui/
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi03
+   url: https://services-staging.humanbrainproject.eu/mimetype/v0/
+   human_url: https://services-staging.humanbrainproject.eu/mimetype/v0/ui/
+   oauth_dev: staging
+
+prod:
+   machine: bbpps10
+   url: https://services.humanbrainproject.eu/mimetype/v0/
+   human_url: https://services.humanbrainproject.eu/mimetype/v0/ui/
+   oauth_dev: prod

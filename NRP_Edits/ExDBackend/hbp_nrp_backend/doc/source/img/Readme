@@ -1,0 +1,5 @@
+To generate the Tikz images, you can use the following commands. If needed,
+adapt the density to control dimensions of output image.
+
+> pdflatex example.tex
+> convert -flatten -density 360 -trim -quality 100 example.pdf example.png

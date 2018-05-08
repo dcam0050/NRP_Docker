@@ -1,0 +1,381 @@
+<sdf version='1.5'>
+  <world name='default'>
+    <light name='room_point' type='point'>
+      <cast_shadows>0</cast_shadows>
+      <pose>0 0 1.5 0 0 0</pose>
+      <attenuation>
+        <range>20</range>
+        <constant>0.1</constant>
+        <linear>0.04</linear>
+        <quadratic>0.03</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <diffuse>0.6 0.6 0.55 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+    </light>
+    <light name='left_spot' type='spot'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 1.794 2.42 0 0 0</pose>
+      <attenuation>
+        <range>6</range>
+        <constant>0.3</constant>
+        <linear>0.04</linear>
+        <quadratic>0.03</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <diffuse>0.6 0.6 0.55 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <spot>
+        <inner_angle>1.3</inner_angle>
+        <outer_angle>1.45</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+    <light name='right_spot' type='spot'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 -1.769 2.42 0 0 0</pose>
+      <attenuation>
+        <range>6</range>
+        <constant>0.3</constant>
+        <linear>0.04</linear>
+        <quadratic>0.03</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <diffuse>0.6 0.6 0.55 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <spot>
+        <inner_angle>1.3</inner_angle>
+        <outer_angle>1.45</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+    </light>
+    <light name='lamp_spot' type='spot'>
+      <cast_shadows>0</cast_shadows>
+      <pose>1.659 2.113 1.858 0 0 0</pose>
+      <attenuation>
+        <range>20</range>
+        <constant>0.7</constant>
+        <linear>0.01</linear>
+        <quadratic>0.00</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <diffuse>0.2 0.2 0.2 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <spot>
+        <inner_angle>0.05</inner_angle>
+
+        <!--
+           The following value should not be set to 3 (the former value),
+           because in the combination of some graphics cards, the "out-of-bound"
+           value of 3 has dramatic consequences on the rendering in some web
+           clients using the THREE.js library (which specifies that PI/2 is
+           the maximum, which is 1,57 or 180 degrees).
+         -->
+        <outer_angle>1</outer_angle>
+
+        <falloff>2</falloff>
+      </spot>
+    </light>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <scene>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <model name="virtual_room">
+      <pose> 0 0 1.26 0 0 0</pose>
+      <static>true</static>
+        <link name="body">
+          <!-- Right wall -->
+          <collision name="right wall">
+            <pose> 0 2.69 0 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>
+                  5.6 0.1 2.5
+                </size>
+              </box>
+            </geometry>
+          </collision>
+          <!-- Left wall -->
+          <collision name="left wall">
+            <pose> 0 -2.69 0 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>
+                  5.6 0.1 2.5
+                </size>
+              </box>
+            </geometry>
+          </collision>
+          <!-- Back wall -->
+          <collision name="back wall">
+            <pose> -2.7 0 0 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>
+                  0.1 5.28 2.5
+                </size>
+              </box>
+            </geometry>
+          </collision>
+          <!-- Small front border from the floor to the beginning of the screen -->
+          <collision name="front border">
+            <pose> 2.7 0 -1.15 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>
+                  0.1 5.28 0.2
+                </size>
+              </box>
+            </geometry>
+          </collision>
+          <!-- Floor -->
+          <collision name="floor">
+            <pose> 0 0 -1.28 0 0 0</pose>
+            <geometry>
+              <box>
+                <size>
+                  5.6 5.48 0.05
+                </size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="room">
+            <geometry>
+              <mesh>
+                <uri>model://virtual_room/meshes/room.dae</uri>
+              </mesh>
+            </geometry>
+          </visual>
+        </link>
+    </model>
+    <model name='vr_lamp'>
+      <pose>1.68 2.11 0.02 0 0 2.36</pose>
+      <static>1</static>
+      <link name='body'>
+        <collision name="pole">
+          <pose>0.354 0.016 0.94 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.0165</radius>
+              <length>1.848</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <collision name="base">
+          <pose>0.354 0.015 0.016 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.42 0.362 0.005</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='lamp'>
+          <geometry>
+            <mesh>
+              <uri>model://vr_lamp/meshes/lamp.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <velocity_decay>
+          <linear>0</linear>
+          <angular>0</angular>
+        </velocity_decay>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
+    </model>
+    <model name='right_vr_screen'>
+      <pose>0 2.44 0.65 0 0 0</pose>
+      <static>1</static>
+      <link name='body'>
+        <collision name="collision">
+          <pose>0 0.13 0.7 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>2 0.18 1.4</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='screen'>
+          <geometry>
+            <mesh>
+              <uri>model://vr_screen/meshes/screen.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='screen_glass'>
+          <cast_shadows>0</cast_shadows>
+          <pose>
+            0 0.02 0.75 0 0 0
+          </pose>
+          <geometry>
+            <box>
+              <size>1.96 0.015 1.1</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Blue</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name='left_vr_screen'>
+      <pose>0 -2.44 0.65 0 0 3.14159</pose>
+      <static>1</static>
+      <link name='body'>
+        <collision name="collision">
+          <pose>0 0.13 0.7 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>2 0.18 1.4</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='screen'>
+          <geometry>
+            <mesh>
+              <uri>model://vr_screen/meshes/screen.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <visual name='screen_glass'>
+          <pose>
+            0 0.02 0.75 0 0 0
+          </pose>
+          <geometry>
+            <box>
+              <size>1.96 0.015 1.1</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Blue</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name='vr_poster'>
+      <pose>-2.725 0.6 1.25 0 0 0</pose>
+      <static>1</static>
+      <link name='body'>
+        <visual name='vr_poster'>
+          <geometry>
+            <mesh>
+              <uri>model://viz_poster/meshes/viz_poster.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name='vr_poster_2'>
+      <pose>-2.725 1.75 1.255 0 0 0</pose>
+      <static>1</static>
+      <link name='body'>
+        <visual name='vr_poster_2'>
+          <geometry>
+            <mesh>
+              <uri>model://viz_poster_2/meshes/viz_poster_2.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name='vr_library'>
+      <pose>-2.50 -1.57 0.005 0 0 0</pose>
+      <static>1</static>
+      <link name='body'>
+        <collision name="base">
+          <pose>-0.109 0.187 0.908 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.218 2.140 1.816</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='library'>
+          <geometry>
+            <mesh>
+              <uri>model://library_model/meshes/library.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <model name='plant'>
+      <pose>2.27 -2.34 0.02 0 0 0</pose>
+      <static>1</static>
+      <link name='body'>
+	      <collision name="pot">
+          <pose>-0.27 0.125 -0.1 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.15</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='hosta_potted_plant'>
+          <geometry>
+            <mesh>
+              <uri>model://hosta_potted_plant/meshes/plant.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>7.10012 0.021041 1.77958 0 0 -3.14</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+  </world>
+</sdf>

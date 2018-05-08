@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ExD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig">
+    <name>ExDXMLExample</name>
+    <thumbnail>ExDXMLExample.png</thumbnail>
+    <description>dummy description</description>
+    <environmentModel src="virtual_room/virtual_room.sdf">
+        <robotPose x="0.0" y="0.0" z="0.0" ux="0.0" uy="0.0" uz="1.0" theta="0.0"/>
+    </environmentModel>
+    <bibiConf src="BIBI/milestone2.xml"/>
+    <experimentControl>
+        <stateMachine xsi:type="SMACHStateMachine" id="ControlSM1" src="control_sm1.py"/>
+        <stateMachine xsi:type="SMACHStateMachine" id="ControlSM2" src="control_sm2.py"/>
+    </experimentControl>
+    <experimentEvaluation>
+        <stateMachine xsi:type="SMACHStateMachine" id="EvaluatingSM" src="eval_sm1.py"/>
+    </experimentEvaluation>
+</ExD>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig"
+     xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/ExDConfig ExDConfFile.xsd">
+    <name>Husky Braitenberg experiment</name>
+    <thumbnail>ExDXMLExample.png</thumbnail>
+    <description>This experiment loads the Husky robot from Clearpath Robotics and the virtual room
+        environment. If the user starts the experiment, the Braitenberg vehicle network is executed
+        and the robot will turn around itself in place, until the camera detects a red color. Then,
+        the robot will move towards the colored object. In this experiment, the user can interact
+        and change the color of both screens by clicking on them with the right mouse button. (Not
+        working on Geneva Servers)
+    </description>
+    <timeout>600</timeout>
+    <maturity>production</maturity>
+    <environmentModel src="virtual_room.sdf" customModelPath="virtual_room.zip">
+        <robotPose x="0.0" y="0.0" z="0.0" ux="0.0" uy="0.0" uz="1.0" theta="0.0"/>
+    </environmentModel>
+    <bibiConf src="BIBI/milestone2.xml"/>
+    <cameraPose>
+        <cameraPosition x="4.5" y="0" z="1.8"/>
+        <cameraLookAt x="0" y="0" z="0.6"/>
+    </cameraPose>
+</ExD>

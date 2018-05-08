@@ -1,0 +1,33 @@
+#!/bin/bash
+# A script to enable or disable oidc
+
+mode=$1
+needs_source=0
+
+if [[ -z $mode ]]; then
+  echo "cpu: Use software-only rendering."
+  echo "gpu: Use hardware accelerated rendering."
+  read mode
+fi
+
+function enableCPURendering {
+  echo "Enabling CPU-only rendering"
+  sed -i 's|$VGLRUN|xvfb-run -a --server-args="-screen 0 1280x1024x24"|' ~/.opt/bbp/nrp-services/gzserver
+  grep -q -- '--software_only_rendering' ${HOME}/.opt/bbp/nrp-services/gzserver || sed -i 's|--pause|--pause --software_only_rendering|' ${HOME}/.opt/bbp/nrp-services/gzserver
+}
+
+function enableGPURendering {
+  echo "Enabling hardware accelerated rendering"
+  sed -i 's|xvfb-run -a --server-args="-screen 0 1280x1024x24"|$VGLRUN|' ~/.opt/bbp/nrp-services/gzserver
+  sed -i 's|--pause --software_only_rendering|--pause|' ${HOME}/.opt/bbp/nrp-services/gzserver
+}
+
+if [ "$mode" == "cpu" ]; then
+  enableCPURendering
+
+elif [ "$mode" == "gpu" ]; then
+  enableGPURendering
+
+fi
+
+echo "Done"

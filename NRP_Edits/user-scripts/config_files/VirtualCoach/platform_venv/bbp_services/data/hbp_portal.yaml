@@ -1,0 +1,24 @@
+properties:
+   description: HBP Portal
+   #confluence:
+   ports: [80]
+   #puppet_recipe:
+   #puppet_url:
+
+dev:
+   machine: bbpcc018
+   url: https://up-dev.humanbrainproject.eu
+   human_url: https://services-dev.humanbrainproject.eu
+   oauth_dev: dev
+
+staging:
+   machine: bbpsrvi15
+   url: https://up-staging.humanbrainproject.eu
+   human_url: https://services-staging.humanbrainproject.eu
+   oauth_dev: staging
+
+prod:
+   machine: bbpgb062
+   url: https://up.humanbrainproject.eu
+   oauth_dev: prod
+   human_url: https://up.humanbrainproject.eu

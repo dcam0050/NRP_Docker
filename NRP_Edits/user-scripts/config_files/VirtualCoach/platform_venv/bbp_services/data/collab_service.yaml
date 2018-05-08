@@ -1,0 +1,18 @@
+properties:
+   description: Collab Service
+   ports: [8000, 8383]
+
+dev:
+   machine: bbpcc026
+   url: https://services-dev.humanbrainproject.eu/collab/v0/
+   oauth_dev: dev
+
+staging:
+   machine: NA
+   url: NA
+   oauth_dev: staging
+
+prod:
+   machine: bbpps05
+   url: https://services.humanbrainproject.eu/collab/v0/
+   oauth_dev: prod

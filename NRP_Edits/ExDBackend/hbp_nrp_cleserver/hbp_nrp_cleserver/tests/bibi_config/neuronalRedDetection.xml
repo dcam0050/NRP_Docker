@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<bibi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.humanbrainproject.eu/SP10/2014/BIBI" xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/BIBI bibi_configuration.xsd">
+  <brainModel>
+    <file>brain_model/braitenberg.h5</file>
+    <populations population="sensors" xsi:type="Range" from="0" to="5"/>
+    <populations population="actors" xsi:type="Range" from="5" to="8"/>
+  </brainModel>
+  <bodyModel>husky_model/model.sdf</bodyModel>
+  <connectors name="connector_e" xsi:type="OneToOneConnector" weights="7.5e-3" delays="0.1"/>
+  <connectors name="connector_i" xsi:type="OneToOneConnector" weights="3.75e-3" delays="0.1"/>
+  <synapseDynamics name="synapseDynamics" xsi:type="TsodyksMarkramMechanism" u="1.0" tau_rec="0.0" tau_facil="0.0"/>
+  <transferFunction xsi:type="Robot2Neuron" name="eye_sensor_transmit">
+    <local name="image_results">
+      <body xsi:type="Call" type="hbp_nrp_cle.tf_framework.tf_lib.get_color_values">
+        <argument name="image">
+          <value xsi:type="ArgumentReference" name="camera" property="value"/>
+        </argument>
+      </body>
+    </local>
+      <deviceGroup name="red_left_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="0" to="600"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_e"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Excitatory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="left_red"/>
+          </body>
+      </deviceGroup>
+      <deviceGroup name="red_right_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="600" to="1200"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_e"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Excitatory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="right_red"/>
+          </body>
+      </deviceGroup>
+      <deviceGroup name="green_left_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="0" to="600"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_i"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Inhibitory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="left_green"/>
+          </body>
+      </deviceGroup>
+      <deviceGroup name="green_right_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="600" to="1200"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_i"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Inhibitory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="right_green"/>
+          </body>
+      </deviceGroup>
+      <deviceGroup name="blue_left_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="0" to="600"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_i"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Inhibitory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="left_blue"/>
+          </body>
+      </deviceGroup>
+      <deviceGroup name="blue_right_eye" type="Poisson">
+          <neurons xsi:type="MapSelector">
+              <source xsi:type="Range" population="sensors" from="600" to="1200"/>
+              <pattern xsi:type="IndexTemplate" index="i"/>
+          </neurons>
+          <connectorRef ref="connector_i"/>
+          <synapseDynamicsRef ref="synapseDynamics"/>
+          <target>Inhibitory</target>
+          <body xsi:type="Scale" factor="250.0">
+              <inner xsi:type="ArgumentReference" name="image_results" property="right_blue"/>
+          </body>
+      </deviceGroup>
+    <topic name="camera" topic="/husky/camera" type="sensor_msgs.msg.Image"/>
+  </transferFunction>
+</bibi>

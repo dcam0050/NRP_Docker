@@ -1,0 +1,45 @@
+{
+    "oidc": {
+        "user": "https://services.humanbrainproject.eu/idm/v1/api/user"
+    },
+
+    "proxy": {
+        "staging": "https://neurorobotics-staging.humanbrainproject.eu/proxyserver",
+        "dev": "https://neurorobotics-dev.humanbrainproject.eu/proxyserver",
+        "local": "http://localhost:9000/proxy"
+    },
+
+    "proxy-services": {
+        "experiment-list": "experiments",
+        "available-servers": "availableServers",
+        "server-info": "server",
+        "experiment-clone": "storage/clone",
+        "storage-authentication": "authentication/authenticate",
+        "storage-experiment-list": "storage/experiments"
+    },
+
+    "simulation-services": {
+        "create": "simulation",
+        "state": "state",
+        "reset": "reset",
+        "csv-recorders": "csv-recorders"
+    },
+
+    "simulation-scripts": {
+        "transfer-function": "transfer-functions",
+        "state-machine": "state-machines",
+        "brain": "brain"
+    },
+
+    "reset-services": {
+        "robot_pose": 0,
+        "full": 1,
+        "world": 2,
+        "brain": 3
+    },
+
+    "ros": {
+        "status": "/ros_cle_simulation/status",
+        "error": "/ros_cle_simulation/cle_error"
+    }
+}

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+GZSERVER_BIN_DIR=$HOME/.local/bin
+
+if [ -z $GZSERVER_BIN_DIR ]; then
+    echo "Necessary environment variable GZBRIDGE_BIN_DIR not set!"
+    exit 1
+fi
+
+#echo "gzserver.sh $1 called" >>~/sys/log/hbp/gzserver_sh.log
+
+exec="$GZSERVER_BIN_DIR/gzserver"
+prog="gzserver"
+
+lockfile=$HOME/.gazebo/gzserver.lock
+
+start() {
+
+    # test if the exec file exists and execute permission is granted
+    # exit with exit code 5 (program not installed) if conditions do not hold
+    if [ -x $exec ]; then
+      echo "Found $exec"
+    else
+      echo "Not found: $exec"
+    fi
+    if [ -f $lockfile ]; then
+      echo "Lockfile found: $lockfile. Gzserver already running or remove manually."
+      return 1
+    fi
+
+    echo -n $"Starting $prog: "
+
+    $VGLRUN $exec $GZSERVER_ARGS \
+                  --pause \
+                  -s $HBP/GazeboRosPackages/devel/lib/libgazebo_ros_api_plugin.so \
+                  -s $HBP/GazeboRosPackages/devel/lib/libgazebo_ros_paths_plugin.so \
+                  -s $HBP/GazeboRosPackages/devel/lib/libgazebo_ros_recording_plugin.so \
+                  -s $HBP/GazeboRosPackages/devel/lib/libgazebo_ros_playback_plugin.so &
+    retval=$?
+    procid=$!
+    if [ $retval -eq 0 ]; then
+      echo " OK."
+    else
+      echo " Error $retval"
+    fi
+    echo
+    [ $retval -eq 0 ] && echo $procid > $lockfile
+    return $retval
+}
+
+stop() {
+    if [ ! -f $lockfile ] ; then
+        return 0
+    fi
+
+    procid=`cat $lockfile`
+    echo -n "Stopping $procid: "
+    kill $procid
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        # make sure gzserver is really dead
+        pkill -f $exec
+        killall Xvfb 2> /dev/null
+        echo " OK."
+    else
+        echo " Error $retval. Removing $lockfile"
+    fi
+    rm -f $lockfile
+    return $retval
+}
+
+case $1 in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 2
+		start
+		;;
+	*)
+		stop
+		sleep 2
+		start
+		;;
+esac

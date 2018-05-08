@@ -1,0 +1,18 @@
+properties:
+   description: Stream service, API to send and retrieve Activities, Streams
+   ports: [8000]
+
+dev:
+   machine: bbpcc015
+   url: https://services-dev.humanbrainproject.eu/stream/v0/api
+   oauth_dev: dev
+
+staging:
+   machine: NA
+   url: NA
+   oauth_dev: staging
+
+prod:
+   machine: bbpsrvi61
+   url: https://services.humanbrainproject.eu/stream/v0/api
+   oauth_dev: prod

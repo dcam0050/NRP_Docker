@@ -1,0 +1,47 @@
+#!/bin/bash
+
+source ${VIRTUAL_ENV}/bin/activate
+pyxbgen -u $HBP/Experiments/bibi_configuration.xsd -m bibi_api_gen
+pyxbgen -u $HBP/Experiments/ExDConfFile.xsd -m exp_conf_api_gen
+deactivate
+
+
+function appendLicenseHeader {
+    read -r -d '' LICENSE << EndLicense
+# ---LICENSE-BEGIN - DO NOT CHANGE OR MOVE THIS HEADER
+# This file is part of the Neurorobotics Platform software
+# Copyright (C) 2014,2015,2016,2017 Human Brain Project
+# https://www.humanbrainproject.eu
+#
+# The Human Brain Project is a European Commission funded project
+# in the frame of the Horizon2020 FET Flagship plan.
+# http://ec.europa.eu/programmes/horizon2020/en/h2020-section/fet-flagships
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+# ---LICENSE-END
+EndLicense
+    filecontent=$(cat $1)
+    (echo "$LICENSE";echo; echo "$filecontent") > $1
+}
+
+appendLicenseHeader bibi_api_gen.py
+appendLicenseHeader exp_conf_api_gen.py
+appendLicenseHeader _sc.py
+
+mv bibi_api_gen.py $HBP/ExDBackend/hbp_nrp_commons/hbp_nrp_commons/generated
+mv exp_conf_api_gen.py $HBP/ExDBackend/hbp_nrp_commons/hbp_nrp_commons/generated
+mv _sc.py $HBP/ExDBackend/hbp_nrp_commons/hbp_nrp_commons/generated
+
+

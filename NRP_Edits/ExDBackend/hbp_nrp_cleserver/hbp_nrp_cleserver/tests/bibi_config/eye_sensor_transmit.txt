@@ -1,0 +1,19 @@
+    synapseDynamics = {'type':'TsodyksMarkram', 'U':1.0, 'tau_rec':0.0, 'tau_facil':0.0}
+    connector_e = {'mode':'OneToOne', 'weights':0.0075, 'delays':0.1}
+    connector_i = {'mode':'OneToOne', 'weights':0.00375, 'delays':0.1}
+    @nrp.MapRobotSubscriber("camera", Topic('/husky/camera', sensor_msgs.msg.Image))
+    @nrp.MapSpikeSource("red_left_eye", nrp.map_neurons(range(0, 600), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_e, receptor_type='excitatory')
+    @nrp.MapSpikeSource("red_right_eye", nrp.map_neurons(range(600, 1200), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_e, receptor_type='excitatory')
+    @nrp.MapSpikeSource("green_left_eye", nrp.map_neurons(range(0, 600), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_i, receptor_type='inhibitory')
+    @nrp.MapSpikeSource("green_right_eye", nrp.map_neurons(range(600, 1200), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_i, receptor_type='inhibitory')
+    @nrp.MapSpikeSource("blue_left_eye", nrp.map_neurons(range(0, 600), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_i, receptor_type='inhibitory')
+    @nrp.MapSpikeSource("blue_right_eye", nrp.map_neurons(range(600, 1200), lambda i: nrp.brain.sensors[i]), nrp.poisson, synapse_dynamics=synapseDynamics, connector=connector_i, receptor_type='inhibitory')
+    @nrp.Robot2Neuron()
+    def eye_sensor_transmit(t, camera, red_left_eye, red_right_eye, green_left_eye, green_right_eye, blue_left_eye, blue_right_eye):
+        image_results = hbp_nrp_cle.tf_framework.tf_lib.get_color_values(image=camera.value)
+        red_left_eye.rate = 250.0 * image_results.left_red
+        red_right_eye.rate = 250.0 * image_results.right_red
+        green_left_eye.rate = 250.0 * image_results.left_green
+        green_right_eye.rate = 250.0 * image_results.right_green
+        blue_left_eye.rate = 250.0 * image_results.left_blue
+        blue_right_eye.rate = 250.0 * image_results.right_blue

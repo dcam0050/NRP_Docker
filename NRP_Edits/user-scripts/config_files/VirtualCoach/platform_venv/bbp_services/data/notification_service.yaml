@@ -1,0 +1,18 @@
+properties:
+   description: Notification service, API to send and retrieve notifications
+   ports: [8000]
+
+dev:
+   machine: bbpcc015
+   url: https://services-dev.humanbrainproject.eu/stream/v0/api/notification/
+   oauth_dev: dev
+
+staging:
+   machine: NA
+   url: NA
+   oauth_dev: staging
+
+prod:
+   machine: bbpsrvi61
+   url: https://services.humanbrainproject.eu/stream/v0/api/notification/
+   oauth_dev: prod

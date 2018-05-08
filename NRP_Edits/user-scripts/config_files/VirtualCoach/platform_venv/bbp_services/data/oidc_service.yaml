@@ -1,0 +1,24 @@
+properties:
+   description: OIDC Server
+   confluence: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/Platform+operations#Platformoperations-OIDC
+   ports: [8080]
+   #puppet_recipe: 
+   puppet_url: https://bbpteam.epfl.ch/project/spaces/display/BBPWFA/OpenID+Connect+Server+recipe
+
+dev:
+   machine: bbpcc023
+   url: https://services-dev.humanbrainproject.eu/oidc/
+   human_url: https://services-dev.humanbrainproject.eu/oidc/
+   api_url: https://services-dev.humanbrainproject.eu/oidc/v0/api
+
+staging:
+   machine: bbpsrvi25
+   url: https://services-staging.humanbrainproject.eu/oidc/
+   human_url: https://services-staging.humanbrainproject.eu/oidc/
+   api_url: https://services-staging.humanbrainproject.eu/oidc/v0/api
+
+prod:
+   machine: bbpsrvi26
+   url: https://services.humanbrainproject.eu/oidc/
+   human_url: https://services.humanbrainproject.eu/oidc/
+   api_url: https://services.humanbrainproject.eu/oidc/v0/api

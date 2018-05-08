@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<bibi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.humanbrainproject.eu/SP10/2014/BIBI">
+  <brainModel>
+    <file>storage://experiment_data/braitenberg.py</file>
+    <populations population="sensors" xsi:type="Range" from="0" to="5"/>
+    <populations population="actors" xsi:type="Range" from="5" to="8"/>
+  </brainModel>
+  <bodyModel>husky_model/model.sdf</bodyModel>
+  <configuration src="dummy_retina_script.py" type="retina"/>
+  <transferFunction xsi:type="Neuron2Monitor" name="all_neurons_spike_monitor">
+    <device name="all_neurons" type="SpikeRecorder">
+      <neurons xsi:type="Range" population="circuit" from="0" to="8" step="1"/>
+    </device>
+  </transferFunction>
+  <transferFunction xsi:type="Neuron2Monitor" name="left_wheel_neuron_rate_monitor">
+    <device name="left_wheel_neuron" type="PopulationRate">
+      <neurons xsi:type="Index" population="actors" index="1"/>
+    </device>
+  </transferFunction>
+  <transferFunction xsi:type="Neuron2Robot" name="linear_twist">
+    <device name="left_wheel_neuron" type="LeakyIntegratorAlpha">
+      <neurons xsi:type="Index" population="actors" index="1"/>
+    </device>
+    <device name="right_wheel_neuron" type="LeakyIntegratorAlpha">
+      <neurons xsi:type="Index" population="actors" index="2"/>
+    </device>
+    <returnValue name="wheel" topic="/husky/cmd_vel" type="geometry_msgs.msg.Twist">
+      <body xsi:type="Call" type="geometry_msgs.msg.Twist">
+        <argument name="linear">
+          <value xsi:type="Call" type="geometry_msgs.msg.Vector3">
+            <argument name="x">
+              <value xsi:type="Scale" factor="20">
+                <inner xsi:type="Min">
+                  <operand xsi:type="ArgumentReference" name="left_wheel_neuron" property="voltage"/>
+                  <operand xsi:type="ArgumentReference" name="right_wheel_neuron" property="voltage"/>
+                </inner>
+              </value>
+            </argument>
+            <argument name="y">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="z">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+          </value>
+        </argument>
+        <argument name="angular">
+          <value xsi:type="Call" type="geometry_msgs.msg.Vector3">
+            <argument name="x">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="y">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="z">
+              <value xsi:type="Scale" factor="100">
+                <inner xsi:type="Subtract">
+                  <operand xsi:type="ArgumentReference" name="right_wheel_neuron" property="voltage"/>
+                  <operand xsi:type="ArgumentReference" name="left_wheel_neuron" property="voltage"/>
+                </inner>
+              </value>
+            </argument>
+          </value>
+        </argument>
+      </body>
+    </returnValue>
+  </transferFunction>
+  <transferFunction xsi:type="Robot2Neuron" name="eye_sensor_transmit">
+    <local name="image_results">
+      <body xsi:type="Call" type="hbp_nrp_cle.tf_framework.tf_lib.detect_red">
+        <argument name="image">
+          <value xsi:type="ArgumentReference" name="camera" property="value"/>
+        </argument>
+      </body>
+    </local>
+    <device name="red_left_eye" type="Poisson">
+      <neurons xsi:type="Range" population="sensors" from="0" to="3" step="2"/>
+      <!--body xsi:type="Scale" factor="0.002"-->
+      <body xsi:type="Scale" factor="1000.0">
+        <inner xsi:type="ArgumentReference" name="image_results" property="left"/>
+      </body>
+    </device>
+    <device name="red_right_eye" type="Poisson">
+      <neurons xsi:type="Range" population="sensors" from="1" to="4" step="2"/>
+      <!--body xsi:type="Scale" factor="0.002"-->
+      <body xsi:type="Scale" factor="1000.0">
+        <inner xsi:type="ArgumentReference" name="image_results" property="right"/>
+      </body>
+    </device>
+    <device name="green_blue_eye" type="Poisson">
+      <neurons xsi:type="Index" population="sensors" index="4"/>
+      <!--body xsi:type="Scale" factor="0.00025"-->
+      <body xsi:type="Scale" factor="1000.0">
+        <inner xsi:type="ArgumentReference" name="image_results" property="go_on"/>
+      </body>
+    </device>
+    <topic name="camera" topic="/husky/camera" type="sensor_msgs.msg.Image"/>
+  </transferFunction>
+</bibi>

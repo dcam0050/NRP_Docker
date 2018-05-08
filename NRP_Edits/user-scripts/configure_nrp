@@ -1,0 +1,107 @@
+#!/bin/bash
+# A script to set-up config files for nginx, Frontend, gzserver & gzbridge, CLE, VirtualCoach
+
+source $HBP/user-scripts/repos.txt
+
+$HBP/user-scripts/purge
+export GROUPNAME=`/usr/bin/id -gn`
+mkdir -p -v $HOME/.local/etc/nginx $HOME/.local/etc/init.d $HOME/.local/etc/default $HOME/nginx $HOME/.local/var/log/nginx $HOME/.local/etc/nginx/lua $HOME/.local/etc/nginx/conf.d $HOME/.opt/bbp
+
+echo "Copying user_makefile to python repos"
+for i in ${nrp_python[@]} ; do cp -f $HBP/user-scripts/config_files/user_makefile $HBP/$i; done
+
+echo "Copying Frontend config.json file"
+ln -s $HBP/user-scripts/config_files/ExDFrontend/config.json.local $HBP/ExDFrontend/app/config.json.local
+cp $HBP/ExDFrontend/app/config.json.local $HBP/ExDFrontend/app/config.json
+sed -e 's/<username>/'"$USER"'/' -i $HBP/ExDFrontend/app/config.json
+
+echo "Copying start/stop scripts for gzserver and gzbridge"
+cp -r $HBP/user-scripts/nrp-services $HOME/.opt/bbp
+chmod u+x $HOME/.opt/bbp/nrp-services/gzbridge
+chmod u+x $HOME/.opt/bbp/nrp-services/gzserver
+
+echo "Copying CLE config.ini file"
+ln -s $HBP/user-scripts/config_files/CLE/config.ini.sample $HBP/CLE/hbp_nrp_cle/hbp_nrp_cle/config.ini.sample
+cp $HBP/CLE/hbp_nrp_cle/hbp_nrp_cle/config.ini.sample $HBP/CLE/hbp_nrp_cle/hbp_nrp_cle/config.ini
+
+echo "Copying hbp-flask-restful config files."
+ln -s $HBP/user-scripts/config_files/hbp-flask-restful-swagger-master/config.json.sample $HBP/ExDBackend/hbp-flask-restful-swagger-master/flask_restful_swagger/static/config.json.sample
+cp $HBP/ExDBackend/hbp-flask-restful-swagger-master/flask_restful_swagger/static/config.json.sample $HBP/ExDBackend/hbp-flask-restful-swagger-master/flask_restful_swagger/static/config.json
+
+echo "Copying Proxy config files."
+ln -s $HBP/user-scripts/config_files/nrpBackendProxy/config.json.sample.local $HBP/nrpBackendProxy/config.json.sample.local
+
+if ! node --version | grep  -q v8.
+then
+  source $HOME/.bashrc
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+  nvm use 8 >/dev/null
+  if [ $? -ne 0 ]
+  then
+    printf "\033[0;31mYou must use node v8. Please run 'nvm install 8 && nvm use 8 && nvm alias default 8 && npm install -g grunt', reopen your shells and run again './configure_nrp'\033[0m\n"
+    exit 1
+  fi
+  nvm alias default 8
+  printf "\033[0;31mSwitched to node v8. Please reopen all your shells and restart the server.\033[0m\n"
+  read -t 5
+fi
+
+echo "Copying Nginx config files"
+cp -r /etc/nginx/* $HOME/.local/etc/nginx/
+cp /etc/init.d/nginx $HOME/.local/etc/init.d/nginx
+sed -e 's/ \/etc\// \/home\/'"$USER"'\/.local\/etc\//' -i /home/$USER/.local/etc/init.d/nginx
+echo 'DAEMON_OPTS="-c $HOME/.local/etc/nginx/nginx.conf -p $HOME/.local/etc/nginx"' >  $HOME/.local/etc/default/nginx
+
+cp $HBP/user-scripts/config_files/nginx/nginx.conf $HOME/.local/etc/nginx/nginx.conf
+sed -e 's/<username>/'"$USER"'/g' -i $HOME/.local/etc/nginx/nginx.conf
+sed -e 's/<groupname>/'"$GROUPNAME"'/g' -i $HOME/.local/etc/nginx/nginx.conf
+
+cp $HBP/user-scripts/config_files/nginx/conf.d/* $HOME/.local/etc/nginx/conf.d
+sed -e 's|<HBP>|'"$HBP"'|' -i $HOME/.local/etc/nginx/conf.d/nrp-services.conf
+sed -e 's/<username>/'"$USER"'/' -i $HOME/.local/etc/nginx/conf.d/nrp-services.conf
+sed -e 's|<HBP>|'"$HBP"'|' -i $HOME/.local/etc/nginx/conf.d/frontend.conf
+
+cp -r $HBP/user-scripts/config_files/nginx/lua/* $HOME/.local/etc/nginx/lua
+
+
+echo "Copying uwsgi config file"
+cp $HBP/user-scripts/config_files/nginx/uwsgi-nrp.ini $HOME/.local/etc/nginx/uwsgi-nrp.ini
+
+echo "Copying VirtualCoach config.json file"
+cp $HBP/user-scripts/config_files/VirtualCoach/config.json $HBP/VirtualCoach/hbp_nrp_virtual_coach/hbp_nrp_virtual_coach/config.json
+if [ "$NRP_INSTALL_MODE" == "user" ]; then
+  echo "Copying VirtualCoach bbpclient"
+  cp -af $HBP/user-scripts/config_files/VirtualCoach/platform_venv/* $HOME/.opt/platform_venv/lib/python2.7/site-packages/
+fi
+
+echo "Generating schema parsers for ExDBackend"
+source $HOME/.opt/platform_venv/bin/activate
+pyxbgen -u $HBP/Experiments/bibi_configuration.xsd -m bibi_api_gen
+pyxbgen -u $HBP/Experiments/ExDConfFile.xsd -m exp_conf_api_gen
+pyxbgen -u $HBP/Models/environment_model_configuration.xsd -m environment_conf_api_gen
+pyxbgen -u $HBP/Models/robot_model_configuration.xsd -m robot_conf_api_gen
+gen_file_path=$HBP/ExDBackend/hbp_nrp_commons/hbp_nrp_commons/generated
+mv bibi_api_gen.py $gen_file_path
+mv exp_conf_api_gen.py $gen_file_path
+mv _sc.py $gen_file_path
+mv robot_conf_api_gen.py $gen_file_path
+mv environment_conf_api_gen.py $gen_file_path
+deactivate
+
+printf "\033[1;33mWould you like to setup your local storage database with a default user? (Y/n)\033[0m\n"
+read -t 5 p
+if [ "$p" == "N" -o "$p" == "n" ]
+then
+  echo "Skipping default database user creation"
+else
+  echo "Setting up local storage database"
+  chmod +x $HBP/user-scripts/configure_storage_database
+  $HBP/user-scripts/configure_storage_database
+fi
+
+echo "Setting configuration files to default mode (offline mode)"
+$HBP/user-scripts/running_mode "2" "no_restart"
+echo "DONE"
+echo
+echo "Warning: your running mode has been switched to full local (2)."
+echo "         you might want to run running_mode to change it."

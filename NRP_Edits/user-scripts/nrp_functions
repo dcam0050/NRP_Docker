@@ -1,0 +1,509 @@
+#!/bin/bash
+# This script holds common functions
+
+if [ -z "$NRP_NUM_MAKE_PROCESSES" ]; then
+printf "\033[1;31m+-------------------------- Neurorobotics Platform warning ---------------------------+\n"
+printf "| Dear Neurorobotics user, your NRP_NUM_MAKE_PROCESSES is not defined.                |\n"
+printf "| This could mean you forgot to source the nrp_variables script before sourcing $0.   |\n"
+printf "| NRP_NUM_MAKE_PROCESSES will be set to the number of cores of your CPU by default.   |\n"
+printf "+-------------------------------------------------------------------------------------+\033[0m\n"
+export NRP_NUM_MAKE_PROCESSES=`nproc`
+fi
+
+function checkssh {
+    echo "Checking $1"
+    touch "$touchfilebase""$1"
+    ssh -o 'BatchMode yes' -o 'StrictHostKeyChecking no' -K root@$1 2>"$touchfilebase""$1" 1>/dev/null /bin/uname
+    offends=`grep "Offending" "$touchfilebase""$1"`
+    if [ -n "$offends" ]
+    then
+      echo "yes" > $2
+      echo
+      echo ------------------------------------------------------------
+      echo $1
+      echo "$offends"
+#      cat "$touchfilebase""$1"
+      echo ------------------------------------------------------------
+    fi
+    rm "$touchfilebase""$1"
+}
+
+function waitforall {
+  finished="NOT"
+  while [ -n "$finished" ]
+  do
+    sleep 5
+    finished=`ls "$touchfilebase"* 2>/dev/null`
+    touchbase=`basename $touchfilebase`
+    replacelist=`echo "$finished" | sed 's/^.*'$touchbase'\(.*\)/\1/' | xargs`
+    if [ -n "$replacelist" ]
+    then
+      echo "Still "$1": "$replacelist
+    fi
+  done
+}
+
+function nest_version_switch {
+  source $HBP/nest-simulator/hbp/version
+  if [[ "$BUILD_VERSION" =~ ^2\.10.*hbp.* ]]
+  then
+    echo
+    echo =========================
+    echo Cleaning up Nest 2.10
+    echo =========================
+    cd $HBP/nest-simulator || { echo ERROR;exit 1; }
+    make clean >/dev/null 2>&1
+    make distclean >/dev/null 2>&1
+    rm -rf build_venv
+  fi
+  sleep 2
+}
+
+function nrp_rebase {
+  rebase_all=$1
+  rebase_branch=$2
+
+  if [ "$rebase_all" == "all" ];then nest_version_switch;fi
+
+  cd $HBP || { echo ERROR;exit 1; }
+  source $HBP/user-scripts/repos.txt || { echo ERROR;exit 1; }
+
+  echo
+  echo =========================
+  echo Rebasing repos
+  echo =========================
+  if [ "$rebase_all" = "all" ]
+  then
+    repos=(
+    ${nrp_3rd_party[*]}
+    ${nrp_repos[*]}
+  )
+  else
+    repos=(
+      ${nrp_repos[*]}
+    )
+  fi
+  for i in ${repos[@]}
+  do
+    echo
+    echo -------------------------
+    echo $i
+    echo -------------------------
+    sleep 2
+    cd $i || { echo ERROR;exit 1; }
+
+    # in case there are unstaged changes we prompt the user to stash them
+    if git status --short | grep -v "??" > /dev/null 2>&1
+    then
+      echo >&2 "About to checkout the $branch branch, you have the following unstaged changes:"
+      git status --short | grep -v "??" >&2
+      echo "Would you like to stash your changes [y] or you would like to abort?"
+      read -p "[Y/n] " -n 1 -r REPLY || { echo ERROR;exit 1; }
+      if [[ ( -z "$REPLY" ) || ( $REPLY =~ ^[Yy] ) ]]; then
+        git stash || { echo ERROR;exit 1; }
+      else
+        echo
+        echo "Could not continue script execution since you have unstaged changes."
+        echo ERROR;exit 1;
+      fi
+    fi
+
+    git checkout $branch && git pull --rebase || { echo ERROR;exit 1; }
+    cd ..
+  done
+}
+
+function ubuntu_fix_cv2 {
+
+  # This imports cv2 to the platform_venv on ubuntu. Use this script on local installations only.
+  # You should have installed python-opencv via apt-get
+
+  mkdir ${NRP_VIRTUAL_ENV}/lib/python2.7/site-packages/ -p || { echo ERROR;exit 1; }
+  cp /usr/lib/python2.7/dist-packages/cv2*.so ${NRP_VIRTUAL_ENV}/lib/python2.7/site-packages/ || { echo ERROR;exit 1; }
+  cp /usr/lib/python2.7/dist-packages/cv.py ${NRP_VIRTUAL_ENV}/lib/python2.7/site-packages/ || { echo ERROR;exit 1; }
+
+}
+
+function install_template_experiments_requirements {
+  source ${NRP_VIRTUAL_ENV}/bin/activate # pip installation is done inside ${NRP_VIRTUAL_ENV}
+  requirements=$HBP/Experiments/template_requirements.txt # TODO(Luc) create $HBP/Experiments/templates and use a requirements.txt file per each template experiment
+  pip install -r ${requirements}
+  deactivate
+}
+
+function generate_low_resolution_pbr_textures {
+  virtualenv lower_res
+  source lower_res/bin/activate
+  pip install pillow==4.3.0
+  python $HBP/user-scripts/generatelowrespbr.py
+  deactivate
+  rm -rf lower_res
+}
+
+function nrp_build {
+  build_all=$1
+
+  echo
+  echo =========================
+  echo Building $build_all
+  echo =========================
+  if [ "$NRP_INSTALL_MODE" != "user" ]
+  then
+    isvpn=$(curl https://bbpteam.epfl.ch/repository/devpi/bbprelman/dev/+simple/pip 2>/dev/null | grep 1.4.1);
+    test -n "$isvpn" || { echo ERROR you should be on the EPFL vpn;exit 1; }
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "prerequisites" ]
+  then
+    for i in simbody opensim sdformat bulletphysics gazebo
+    do
+      echo
+      echo -------------------------
+      echo $i
+      echo -------------------------
+      sleep 2
+
+      if [ "$i" == "gazebo" ]; then cmake_args="-DENABLE_TESTS_COMPILATION:BOOL=False"; else cmake_args=;fi
+      cd $HBP/$i || { echo ERROR;exit 1; }
+      mkdir -p build
+      cd build
+      cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local $cmake_args .. || { echo ERROR;exit 1; }
+      make -j$NRP_NUM_MAKE_PROCESSES || { echo $i BUILD ERROR;exit 1; }
+      make install || { echo $i INSTALL ERROR;exit 1; }
+    done
+  fi
+  
+if [ "$build_all" = "all" ] || [ "$build_all" = "mvapich" ]
+  then
+    echo
+    echo -------------------------
+    echo Mvapich2
+    echo -------------------------
+    sleep 2
+    cd $HBP/mvapich2 || { echo ERROR;exit 1; }
+    ./autogen.sh || { echo MVAPICH2 AUTOGEN ERROR;exit 1; }
+    ./configure --prefix=$HOME/.local --with-device=ch3:nemesis || { echo MVAPICH2 CONFIGURE ERROR;exit 1; }
+    make -j$NRP_NUM_MAKE_PROCESSES || { echo MVAPICH2 BUILD ERROR;exit 1; }
+    make install || { echo MVAPICH2 INSTALL ERROR;exit 1; }
+    git clean -fd || { echo ERROR;exit 1; }
+fi
+
+if [ "$build_all" = "all" ] || [ "$build_all" = "music" ]
+  then
+    echo
+    echo -------------------------
+    echo MUSIC
+    echo -------------------------
+    sleep 2
+    cd $HBP/MUSIC
+    ln -sf $HOME/.local/bin/mpichversion mpich2version
+    old_path=$PATH
+    export PATH=$PATH:$HBP/MUSIC
+    export LDFLAGS+=" -pthread"
+    ( # use a subshell to avoid "nested" virtualenv issues
+      virtualenv build_venv || { echo ERROR;exit 1; }
+      source build_venv/bin/activate
+      pip install Cython==0.23.4 mpi4py==2.0.0 || { echo CYTHON_MI4PY INSTALL ERROR;exit 1; }
+      deactivate
+    )
+    PYTHONPATH=$HBP/MUSIC/build_venv/lib/python2.7/site-packages:$PYTHONPATH
+    ./autogen.sh
+    ./autogen.sh || { echo ERROR;exit 1; }
+    ./configure --prefix=$HOME/.local MPI_CXX=mpicxx || { echo ERROR;exit 1; }
+    make -j$NRP_NUM_MAKE_PROCESSES || { echo MUSIC BUILD ERROR;exit 1; }
+    make install || { echo MUSIC INSTALL ERROR;exit 1; }
+    rm -rf build_venv || { echo ERROR;exit 1; }
+    rm mpich2version || { echo ERROR;exit 1; }
+    export PATH=$old_path
+    old_path=
+    export LDFLAGS=
+fi
+
+if [ "$build_all" = "all" ] || [ "$build_all" = "nest" ]
+  then
+    echo
+    echo -------------------------
+    echo Nest
+    echo -------------------------
+    sleep 2
+    cd $HBP/nest-simulator || { echo ERROR;exit 1; }
+    ( # use a subshell to avoid "nested" virtualenv issues
+      virtualenv build_venv || { echo ERROR;exit 1; }
+      source build_venv/bin/activate
+      pip install Cython==0.23.4 mpi4py==2.0.0 || { echo ERROR;exit 1; }
+      xargs rm -rf < $HBP/user-scripts/nest-delete-filelist.txt || { echo ERROR;exit 1; }
+      if [ ! -d $HBP/nest-simulator/build ]; then
+        mkdir $HBP/nest-simulator/build || { echo ERROR;exit 1;}
+      fi
+      cd $HBP/nest-simulator/build || { echo ERROR;exit 1;}
+      cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME/.local -Dwith-gsl=ON -Dwith-mpi=ON -Dwith-music=ON .. || { echo ERROR;exit 1; }
+      make -j$NRP_NUM_MAKE_PROCESSES || { echo NEST BUILD ERROR;exit 1; }
+      make install || { echo NEST INSTALL ERROR;exit 1; }
+
+      # optional: install UGR's Cerebellum model plugin
+      cd ../SpikingCerebellum/src/CerebellumModule
+      mkdir build && cd build && cmake .. && make && make install
+      cd ../../../../build/ && cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME/.local \
+         -Dwith-gsl=ON -Dwith-mpi=ON -Dwith-music=ON -Dexternal-modules=cerebellum \
+         ..
+      make -j8
+      make install
+
+      deactivate
+    )
+    rm -rf build_venv || { echo ERROR; exit 1; }
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "gazebo_ros" ]
+  then
+    cd $HBP || { echo ERROR;exit 1; }
+
+    echo
+    echo -------------------------
+    echo GazeboRosPackages
+    echo -------------------------
+    sleep 2
+    cd $HBP/GazeboRosPackages || { echo ERROR;exit 1; }
+    rm -rf build
+    catkin_make || { echo GAZEBO_ROSPACKAGES BUILD ERROR;exit 1; }
+    cd ..
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "backend" ]
+  then
+    cd $HBP || { echo ERROR;exit 1; }
+    for i in ExperimentControl BrainSimulation VirtualCoach CLE ExDBackend
+    do
+      echo
+      echo -------------------------
+      echo $i
+      echo -------------------------
+      sleep 2
+      cd $i || { echo ERROR;exit 1; }
+      make devinstall || { echo $i BUILD ERROR;exit 1; }
+      cd ..
+    done
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "fixcv" ]
+  then
+    $HBP/CLE/ubuntu_fix_cv2.sh || { echo ERROR;exit 1; }
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "frontend" ]
+  then
+    cd $HBP || { echo ERROR;exit 1; }
+    for i in brainvisualizer ExDFrontend nrpBackendProxy SlurmClusterMonitor
+    do
+      echo
+      echo -----------------------
+      echo $i
+      echo -----------------------
+      sleep 2
+      cd $i || { echo ERROR;exit 1; }
+      if [ "$i" == "brainvisualizer" ]; then
+          rm -rf node_modules
+      fi
+      npm install || { echo  $i INSTALL ERROR;exit 1; }
+      if [ "$i" == "ExDFrontend" ]; then
+          grunt build --force || { echo GRUNT BUILD FAILED;exit 1; }
+      fi
+      cd ..
+    done
+  fi
+
+  if [ "$build_all" = "all" ] || [ "$build_all" = "gzweb" ]
+  then
+    cd $HBP || { echo ERROR;exit 1; }
+    echo
+    echo -------------------------
+    echo gzweb
+    echo -------------------------
+    sleep 2
+    cd gzweb || { echo ERROR;exit 1; }
+    ./deploy-gzbridge-nrp.sh || { echo GZBRIDGE BUILD ERROR;exit 1; }
+    npm install || { echo GZBRIDGE INSTALL ERROR;exit 1; }
+    cd gz3d/utils || { echo ERROR;exit 1; }
+    npm install || { echo GZ3D INSTALL ERROR;exit 1; }
+    cd ../../.. || { echo ERROR;exit 1; }
+
+    echo
+    echo -------------------------
+    echo Models
+    echo -------------------------
+    sleep 2
+    echo "Generate low resolution PBR textures"
+    generate_low_resolution_pbr_textures || { echo ERROR; exit 1; }
+    echo "Create symlinks"
+    if [ ! -d "$HOME/.gazebo/models" ]; then
+     mkdir -p $HOME/.gazebo/models || { echo ERROR;exit 1;}
+    fi
+    cd Models || { echo ERROR;exit 1; }
+    ./create-symlinks.sh || { echo ERROR;exit 1; }
+    cd ..
+
+
+    echo
+    echo -------------------------
+    echo Experiments
+    echo -------------------------
+    sleep 2
+    echo "Install Experiments'requirements"
+    install_template_experiments_requirements || { echo ERROR;exit 1; }
+  fi
+}
+
+function nrp_configure {
+  echo
+  echo "Would you like to run configure_nrp right away to update the config files?"
+  read -p "Note that this will backup your local config files with then .bak extension. [Y/n] " -n 1 -r REPLY
+  echo
+  if [[ ( -z "$REPLY" ) || ( $REPLY =~ ^[Yy] ) ]]; then
+    $HBP/user-scripts/configure_nrp || { echo ERROR;exit 1; }
+  fi
+}
+
+function clean_branches {
+  clean_all=$1
+
+  cd $HBP || { echo ERROR;exit 1; }
+  source $HBP/user-scripts/repos.txt || { echo ERROR;exit 1; }
+
+  echo
+  echo =========================
+  echo Cleaning up branches
+  echo =========================
+  if [ "$clean_all" = "all" ]
+  then
+    repos=(
+    ${nrp_3rd_party[*]}
+    ${nrp_repos[*]}
+  )
+  else
+    repos=(
+      ${nrp_repos[*]}
+    )
+  fi
+  for i in ${repos[@]}
+  do
+    echo
+    echo -------------------------
+    echo $i
+    echo -------------------------
+    sleep 2
+    cd $i || { echo ERROR;exit 1; }
+    git branch | grep -v "master" | grep -v "development" | xargs git branch -D 2>/dev/null
+    cd ..
+  done
+}
+
+function it_branch {
+  itbranch_all=$1
+
+  cd $HBP || { echo ERROR;exit 1; }
+  source $HBP/user-scripts/repos.txt || { echo ERROR;exit 1; }
+
+  echo
+  echo =========================
+  echo Creating clean IT branch
+  echo =========================
+  if [ "$itbranch_all" = "all" ]
+  then
+    repos=(
+    ${nrp_3rd_party[*]}
+    ${nrp_repos[*]}
+  )
+  else
+    repos=(
+      ${nrp_repos[*]}
+    )
+  fi
+  for i in ${repos[@]}
+  do
+    echo
+    echo -------------------------
+    echo $i
+    echo -------------------------
+    sleep 2
+    cd $i || { echo ERROR;exit 1; }
+    { git branch | grep "^ *IT$" && git branch -D IT || true; } && git checkout -b IT || { echo ERROR;exit 1; }
+    cd ..
+  done
+}
+
+function merge_dev {
+
+  cd $HBP || { echo ERROR;exit 1; }
+  source $HBP/user-scripts/repos.txt || { echo ERROR;exit 1; }
+
+  echo
+  echo =========================
+  echo Merging development on master
+  echo =========================
+  repos=(
+  ${nrp_3rd_party[*]}
+  ${nrp_repos[*]}
+  )
+
+  for i in ${repos[@]}
+  do
+    echo
+    echo -------------------------
+    echo $i
+    echo -------------------------
+    sleep 2
+    cd $i || { echo ERROR;exit 1; }
+    git checkout development || { echo ERROR;exit 1; }
+    git pull --rebase || { echo ERROR;exit 1; }
+    git checkout master || { echo ERROR;exit 1; }
+    git pull --rebase || { echo ERROR;exit 1; }
+    git merge development || { echo ERROR;exit 1; }
+    git push || { echo ERROR;exit 1; }
+    gitk
+    cd ..
+  done
+}
+
+function set_up_tingoDB {
+  #check if the STORAGE_PATH is set, if not we use the default ~/.opt/nrpStorage
+  if [ -z ${STORAGE_PATH+x} ];
+   then echo "STORAGE_PATH is unset. Defaulting to ~/.opt/nrpStorage"
+     STORAGE_PATH=~/.opt/nrpStorage
+   else echo "STORAGE_PATH is set to '$STORAGE_PATH'"
+  fi
+  #check if the storage path exists
+  if [ ! -d "$STORAGE_PATH" ]; then
+   mkdir -p $STORAGE_PATH || { echo ERROR;exit 1;}
+  fi
+
+  node $HBP/nrpBackendProxy/utils/createFSUser.js --user nrpuser --password password || { echo ERROR;exit 1; }
+  node $HBP/nrpBackendProxy/utils/createFSUser.js --user admin --password password || { echo ERROR;exit 1; }
+}
+
+function add_new_user_tingoDB {
+  #check if the STORAGE_PATH is set, if not we use the default ~/.opt/nrpStorage
+  echo
+  echo "Welcome to the interactive nrp storage database user creation"
+  echo
+  if [ -z ${STORAGE_PATH+x} ];
+   then echo "STORAGE_PATH is unset. Defaulting to ~/.opt/nrpStorage"
+     STORAGE_PATH=~/.opt/nrpStorage
+   else echo "STORAGE_PATH is set to '$STORAGE_PATH'"
+  fi
+  #check if the storage path exists
+  if [ ! -d "$STORAGE_PATH" ]; then
+   mkdir $STORAGE_PATH || { echo ERROR;exit 1;}
+  fi
+  echo "Type the username and press [ENTER]"
+  read username || { echo ERROR;exit 1; }
+  echo
+  echo "Type the password and press [ENTER]"
+  read -s password || { echo ERROR;exit 1; }
+  echo
+  echo "Are you finished with your input [y] or you would like to abort?"
+  read -p "[Y/n] " -n 1 -r REPLY || { echo ERROR;exit 1; }
+  echo
+  if [[ ( -z "$REPLY" ) || ( $REPLY =~ ^[Yy] ) ]]; then
+    node $HBP/nrpBackendProxy/utils/createFSUser.js --user $username --password $password || { echo ERROR;exit 1; }
+  fi
+}

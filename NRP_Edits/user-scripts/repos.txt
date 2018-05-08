@@ -1,0 +1,37 @@
+nrp_python=(
+    BrainSimulation
+    ExperimentControl
+    VirtualCoach
+    CLE
+    ExDBackend
+)
+nrp_other=(
+    GazeboRosPackages
+    Models
+    Experiments
+    server-scripts
+    user-scripts
+)
+nrp_js=(
+    gzweb
+    SlurmClusterMonitor
+    nrpBackendProxy
+    brainvisualizer
+    ExDFrontend
+)
+nrp_repos=(
+    ${nrp_python[*]}
+    ${nrp_other[*]}
+    ${nrp_js[*]}
+)
+nrp_3rd_party=(
+    sdformat
+    bulletphysics
+    simbody
+    opensim
+    gazebo
+    MUSIC
+    mvapich2
+    nest-simulator
+    retina
+)

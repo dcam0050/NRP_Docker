@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<bibi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.humanbrainproject.eu/SP10/2014/BIBI" xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/BIBI bibi_configuration.xsd">
+  <brainModel>circuit.h5</brainModel>
+  <bodyModel>husky.sdf</bodyModel>
+  <transferFunction xsi:type="Neuron2Robot" name="linear_twist">
+    <device name="left_wheel_neuron" type="LeakyIntegratorAlpha">
+      <neurons xsi:type="Index" population="actors" index="1"/>
+    </device>
+    <device name="right_wheel_neuron" type="LeakyIntegratorAlpha">
+      <neurons xsi:type="Index" population="actors" index="2"/>
+    </device>
+    <topic name="wheel" topic="/husky/cmd_vel" type="geometry_msgs.msg.Twist">
+      <body xsi:type="Call" type="geometry_msgs.msg.Twist">
+        <argument name="linear">
+          <value xsi:type="Call" type="geometry_msgs.msg.Vector3">
+            <argument name="x">
+              <value xsi:type="Scale" factor="500">
+                <inner xsi:type="Min">
+                  <operand xsi:type="ArgumentReference" name="left_wheel_neuron" property="voltage"/>
+                  <operand xsi:type="ArgumentReference" name="right_wheel_neuron" property="voltage"/>
+                </inner>
+              </value>
+            </argument>
+            <argument name="y">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="z">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+          </value>
+        </argument>
+        <argument name="angular">
+          <value xsi:type="Call" type="geometry_msgs.msg.Vector3">
+            <argument name="x">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="y">
+              <value xsi:type="Constant" value="0"/>
+            </argument>
+            <argument name="z">
+              <value xsi:type="Scale" factor="1500">
+                <inner xsi:type="Subtract">
+                  <operand xsi:type="ArgumentReference" name="left_wheel_neuron" property="voltage"/>
+                  <operand xsi:type="ArgumentReference" name="right_wheel_neuron" property="voltage"/>
+                </inner>
+              </value>
+            </argument>
+          </value>
+        </argument>
+      </body>
+    </topic>
+  </transferFunction>
+  <transferFunction xsi:type="Robot2Neuron" name="eye_sensor_transmit">
+    <local name="image_results">
+      <body xsi:type="Call" type="hbp_nrp_cle.tf_framework.tf_lib.detect_red">
+        <argument name="image">
+          <value xsi:type="ArgumentReference" name="camera" property="value"/>
+        </argument>
+      </body>
+    </local>
+    <device name="red_left_eye" type="Poisson">
+      <neurons xsi:type="Index" population="sensors" index="0"/>
+      <body xsi:type="Scale" factor="0.002">
+        <inner xsi:type="ArgumentReference" name="image_results" property="left"/>
+      </body>
+    </device>
+    <device name="red_right_eye" type="Poisson">
+      <neurons xsi:type="Index" population="sensors" index="1"/>
+      <body xsi:type="Scale" factor="0.002">
+        <inner xsi:type="ArgumentReference" name="image_results" property="right"/>
+      </body>
+    </device>
+    <device name="green_blue_eye" type="Poisson">
+      <neurons xsi:type="Index" population="sensors" index="2"/>
+      <body xsi:type="Scale" factor="0.00025">
+        <inner xsi:type="ArgumentReference" name="image_results" property="go_on"/>
+      </body>
+    </device>
+    <topic name="camera" topic="/husky/camera" type="sensor_msgs.msg.Image"/>
+  </transferFunction>
+</bibi>

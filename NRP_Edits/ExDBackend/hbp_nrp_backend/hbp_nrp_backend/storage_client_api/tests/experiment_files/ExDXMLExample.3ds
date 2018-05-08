@@ -1,0 +1,41 @@
+{
+    "shadows": true,
+    "antiAliasing": true,
+    "ssao": false,
+    "ssaoDisplay": false,
+    "ssaoClamp": 0.8,
+    "ssaoLumInfluence": 0.7,
+    "rgbCurve": {
+        "red": [],
+        "green": [],
+        "blue": [
+            [
+                0,
+                0
+            ],
+            [
+                0.7728271484375,
+                0.75146484375
+            ],
+            [
+                1,
+                1
+            ]
+        ]
+    },
+    "levelsInBlack": "0.08",
+    "levelsInGamma": 0.95,
+    "levelsInWhite": "0.95",
+    "levelsOutBlack": 0,
+    "levelsOutWhite": 1,
+    "skyBox": "img/3denv/sky/blur/blur",
+    "sun": "",
+    "bloom": false,
+    "bloomStrength": "0.51",
+    "bloomRadius": "1.26",
+    "bloomThreshold": "0.91",
+    "fog": false,
+    "fogDensity": "0.03",
+    "fogColor": "#c7c0bc",
+    "pbrMaterial": true
+}

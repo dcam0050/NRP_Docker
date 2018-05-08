@@ -1,0 +1,15 @@
+cat README; exit
+
+To generate generated_bibi_api or any other Python classes from an XML Schema document, run the following command:
+
+pyxbgen -u <XML Schema document>.xsd -m <name of generated python module>
+
+Example:
+    cd $HBP/ExDBackend/hbp_nrp_commons/hbp_nrp_commons/generated
+    pyxbgen -u $HBP/Experiments/ExDConfFile.xsd -m exp_conf_api_gen
+    pyxbgen -u $HBP/Models/robot_model_configuration.xsd -m robot_conf_api_gen
+    pyxbgen -u $HBP/Models/environment_model_configuration.xsd -m environment_conf_api_gen
+
+Attention: the xml schema has to be specified with its file ending, the python module without.
+
+PyXB supports other options, but this suffices for our purposes

@@ -1,0 +1,53 @@
+{
+  "api": {
+    "user": {
+      "v0": "https://services.humanbrainproject.eu/oidc/v0/api",
+      "v1": "https://services.humanbrainproject.eu/idm/v1/api"
+    },
+    "account": {
+      "v1": "https://services.humanbrainproject.eu/idm/v1/api"
+    },
+    "slurmmonitor": {
+      "url": "https://neurorobotics-dev.humanbrainproject.eu/slurmmonitor"
+    },
+    "document": {
+      "v0": "https://services.humanbrainproject.eu/document/v0/api",
+      "v1": "https://services.humanbrainproject.eu/storage/v1/api"
+    },
+    "proxy": {
+      "url": "http://localhost:9000/proxy"
+    },
+    "collab": {
+      "v0": "https://services.humanbrainproject.eu/collab/v0"
+    }
+  },
+  "auth": {
+    "clientId": "neurorobotics-ui",
+    "url": "https://services.humanbrainproject.eu/oidc"
+  },
+  "collab" : {
+    "features": {
+      "identity" : {
+        "userApiV1" : true
+      }
+    },
+    "collabIds": {
+      "neuroroboticsCollabBaseUrl": "https://collab.humanbrainproject.eu/#/collab/570/nav/",
+      "pagesId": {
+        "upgrade": 12893,
+        "tutorial": 11696,
+        "exampleExperiments": 5098,
+        "createCollab": 5650,
+        "documentation": 12894,
+        "support": 5101
+      }
+    }
+  },
+  "ros-topics": {
+    "spikes": "/monitor/spike_recorder",
+    "joint": "/joint_states",
+    "status": "/ros_cle_simulation/status",
+    "cleError": "/ros_cle_simulation/cle_error",
+    "logs": "/ros_cle_simulation/logs"
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bibi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.humanbrainproject.eu/SP10/2014/BIBI" xsi:schemaLocation="http://schemas.humanbrainproject.eu/SP10/2014/BIBI ../bibi_configuration.xsd">
+  <brainModel>
+    <file>brain_model/tutorial_baseball.py</file>
+  </brainModel>
+  <bodyModel>icub_model/model.sdf</bodyModel>
+  <transferFunction xsi:type="PythonTransferFunction" src="simple_move_robot.py"/>
+  <transferFunction xsi:type="PythonTransferFunction" src="monitor_population.py"/>
+  <transferFunction xsi:type="PythonTransferFunction" src="grab_image.py"/>
+  <transferFunction xsi:type="PythonTransferFunction" src="swing.py"/>
+</bibi>
