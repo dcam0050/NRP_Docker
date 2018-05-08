@@ -15,3 +15,14 @@
 
 
 -NRP/user-scripts/update_nrp changed shell commands to take into consideration parameters passed when specifying parts to install. Required for the changed done in nrp\_functions
+
+Compile using `docker build -t $(tagName) . --build-arg VIDEO_GID=$(VIDEO_GID)`
+
+Run instructions at https://hub.docker.com/r/dcamilleri13/hbp_nrp/
+
+To run HBP components, after spinning up container:
+
+1. Run `terminator` to launch multi-tab terminal.
+2. In first tab run `cle-nginx`. This will block but is running correctly.
+3. In the second tab run `cle-start`.
+4. In the third tab run `cle-frontend`.
