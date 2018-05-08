@@ -1,0 +1,2 @@
+export  PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin CUDA_VERSION=8.0.61 CUDA_PKG_VERSION=8-0=8.0.61-1 LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64 NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=compute,utility NVIDIA_REQUIRE_CUDA=cuda>=8.0 LIBRARY_PATH=/usr/local/cuda/lib64/stubs: CUDNN_VERSION=5.1.10 SRC_FOLDER=/root HBP=/root/NRP NRP_INSTALL_MODE=user LANG=C.UTF-8 LC_ALL=C.UTF-8 ROS_DISTRO=kinetic NVM_DIR=/root/.nvm PYTHONPATH=
+source ~/.sourceScripts
